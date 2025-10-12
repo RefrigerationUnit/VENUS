@@ -5,39 +5,112 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Colossus Maps — MVP Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React (development builds for demo); swap to .production.min.js later -->
+  <!-- React (dev builds for demo) -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- Babel to transpile JSX in the browser (fine for demos, not production) -->
+  <!-- Babel to transpile JSX in-browser (fine for demos) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    html,body { background:#fafafa }
-  </style>
+  <style>html,body{background:#fafafa}</style>
+
+  <script>
+    // ---- Google Maps callback (must be on window) ----
+    // Initializes the map once the Maps JS API loads
+    window.initMap = function(){
+      const el = document.getElementById("map");
+      if (!el) return;
+      // Create a basic map centered on the U.S.
+      window.__gmap = new google.maps.Map(el, {
+        center: { lat: 37.1, lng: -95.7 },
+        zoom: 4,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+      window.__gmarkers = [];
+    };
+
+    // Helper to clear and add markers
+    window.__refreshMarkers = function(sites){
+      if (!window.__gmap) return;
+      // Clear old markers
+      (window.__gmarkers || []).forEach(m => m.setMap(null));
+      window.__gmarkers = [];
+
+      const bounds = new google.maps.LatLngBounds();
+      const iw = new google.maps.InfoWindow();
+
+      sites.forEach(site => {
+        if (!site.lat || !site.lng) return;
+        const color =
+          site.readiness >= 80 ? "#10b981" : // emerald-600
+          site.readiness >= 60 ? "#f59e0b" : // amber-500
+          "#e11d48"; // rose-600
+
+        const marker = new google.maps.Marker({
+          position: { lat: site.lat, lng: site.lng },
+          map: window.__gmap,
+          title: site.title,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: color,
+            fillOpacity: 1,
+            strokeWeight: 1,
+            strokeColor: "#1f2937" // zinc-800
+          }
+        });
+
+        marker.addListener("click", () => {
+          iw.setContent(`
+            <div style="font-family:ui-sans-serif;max-width:260px">
+              <div style="font-weight:600">${site.title}</div>
+              <div style="font-size:12px;color:#6b7280">${site.state} • ${site.assetType.replace("_"," ")} • ${site.commodities.join(", ")} • ${site.stage}</div>
+              <div style="font-size:12px;margin-top:4px">
+                Readiness: <b>${site.readiness}</b> • Timeline: <b>${site.timelineMonths} mo</b><br/>
+                Capex: <b>${site.capexBand}</b>
+              </div>
+            </div>
+          `);
+          iw.open(window.__gmap, marker);
+        });
+
+        window.__gmarkers.push(marker);
+        bounds.extend(marker.getPosition());
+      });
+
+      if (!bounds.isEmpty()) window.__gmap.fitBounds(bounds);
+    };
+  </script>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useMemo, useState } = React;
+    const { useMemo, useState, useEffect } = React;
 
-    // --- Seed demo data ---
+    // --- Seed demo data with coordinates ---
+    // (Dummy coordinates near each state)
     const SITES = [
       { id:"nv-001", title:"Silver Basin Li Project", state:"NV", assetType:"mine",
         commodities:["lithium"], stage:"PFS", readiness:82, timelineMonths:20,
         capexBand:"$150–220M",
-        tags:["48C-eligible","Power: 22MW @ 9km","Rail: 4km","EJ: Low"] },
+        tags:["48C-eligible","Power: 22MW @ 9km","Rail: 4km","EJ: Low"],
+        lat: 39.5, lng: -117.1 },
       { id:"tx-011", title:"Red River REE Processing", state:"TX", assetType:"processing",
         commodities:["REE"], stage:"permitting", readiness:74, timelineMonths:18,
         capexBand:"$180–260M",
-        tags:["Title 17 fit","Water rights secured","Highway: 2km","EJ: Moderate"] },
+        tags:["Title 17 fit","Water rights secured","Highway: 2km","EJ: Moderate"],
+        lat: 31.8, lng: -99.3 },
       { id:"tn-004", title:"Volta Industrial Shell (Refit)", state:"TN", assetType:"industrial_shell",
         commodities:["graphite","copper"], stage:"construction", readiness:88, timelineMonths:12,
         capexBand:"$65–120M",
-        tags:["Grid queue filed","Clear height 34'","Rail spur on site","EJ: Low"] },
+        tags:["Grid queue filed","Clear height 34'","Rail spur on site","EJ: Low"],
+        lat: 35.9, lng: -86.3 },
       { id:"az-019", title:"Canyon Manganese Hub", state:"AZ", assetType:"mine",
         commodities:["manganese"], stage:"FS", readiness:69, timelineMonths:28,
         capexBand:"$240–330M",
-        tags:["Brownfield","Port: 120km","Power: 18MW @ 12km","EJ: Moderate"] },
+        tags:["Brownfield","Port: 120km","Power: 18MW @ 12km","EJ: Moderate"],
+        lat: 34.2, lng: -111.7 },
     ];
 
     const STATES = ["NV","TX","TN","AZ"];
@@ -64,6 +137,11 @@
           s.tags.some(t => Array.from(query.ej).some(lvl => t.includes(`EJ: ${lvl}`)))
         ), [query]
       );
+
+      // Keep map markers in sync with current filtered list
+      useEffect(() => {
+        if (window.__refreshMarkers) window.__refreshMarkers(filtered);
+      }, [filtered]);
 
       return (
         <div className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -144,9 +222,7 @@
 
             {/* Map + Results */}
             <section className="col-span-12 lg:col-span-9 flex flex-col gap-4">
-              <div className="bg-white h-64 rounded-2xl shadow-sm border border-zinc-200 flex items-center justify-center">
-                <div className="text-zinc-400 text-sm">[ Map placeholder — tiles & markers plug in later ]</div>
-              </div>
+              <div id="map" className="bg-white h-64 rounded-2xl shadow-sm border border-zinc-200"></div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 {filtered.map(s => <SiteCard key={s.id} site={s} />)}
@@ -211,6 +287,11 @@
     }
 
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+
+  <!-- Google Maps JavaScript API (your key + callback) -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZ_wvUHsBJuwTL-TKi6S2-Q1oLdhdAAz4&libraries=places,geometry&callback=initMap">
   </script>
 </body>
 </html>
