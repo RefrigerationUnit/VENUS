@@ -1,38 +1,89 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Colossus Maps — MVP Demo</title>
+  <title>Colossus Maps — MVP Demo (Dark)</title>
+
+  <!-- Tailwind (CDN for demo) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class", theme: { extend: {} } };
+  </script>
+
   <!-- React (dev builds for demo) -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- Babel to transpile JSX in-browser (fine for demos) -->
+  <!-- Babel (in-browser JSX; fine for demos) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>html,body{background:#fafafa}</style>
 
+  <style>
+    html, body { background:#0a0a0a; }
+    /* Ensure the map can never collapse, even if Tailwind fails to load */
+    #map { height: 400px; min-height: 320px; width: 100%; }
+  </style>
+
+  <!-- Google Maps init + dark style -->
   <script>
-    // ---- Google Maps callback (must be on window) ----
-    // Initializes the map once the Maps JS API loads
+    const DARK_MAP_STYLE = [
+      { elementType: "geometry", stylers: [{ color: "#1f2937" }]},
+      { elementType: "labels.text.stroke", stylers: [{ color: "#1f2937" }]},
+      { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }]},
+      { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d1d5db" }]},
+      { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#a3a3a3" }]},
+      { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0b3a2b" }]},
+      { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#86efac" }]},
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#374151" }]},
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111827" }]},
+      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#d1d5db" }]},
+      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1f2937" }]},
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }]},
+      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#000000" }]}
+    ];
+
+    // Called by Google Maps JS API after it loads
     window.initMap = function(){
-      const el = document.getElementById("map");
-      if (!el) return;
-      // Create a basic map centered on the U.S.
-      window.__gmap = new google.maps.Map(el, {
-        center: { lat: 37.1, lng: -95.7 },
-        zoom: 4,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true,
-      });
-      window.__gmarkers = [];
+      // Wait until React has rendered the #map node
+      const start = performance.now();
+      const waitForMapEl = () => {
+        const el = document.getElementById("map");
+        if (el) {
+          // Initialize the map
+          window.__gmap = new google.maps.Map(el, {
+            center: { lat: 37.1, lng: -95.7 },
+            zoom: 4,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            styles: DARK_MAP_STYLE,
+            backgroundColor: "#0a0a0a"
+          });
+          window.__gmarkers = [];
+          // If React already computed a filtered list, draw markers now
+          if (window.__refreshMarkersPending) {
+            window.__refreshMarkers(window.__refreshMarkersPending);
+            window.__refreshMarkersPending = null;
+          }
+          return;
+        }
+        // Retry for up to ~3 seconds
+        if (performance.now() - start < 3000) {
+          requestAnimationFrame(waitForMapEl);
+        }
+      };
+      waitForMapEl();
     };
 
-    // Helper to clear and add markers
+    // Exposed so React can (re)draw markers after filters change
     window.__refreshMarkers = function(sites){
-      if (!window.__gmap) return;
-      // Clear old markers
+      if (!Array.isArray(sites)) return;
+
+      // If map isn't ready yet, stash and draw on init
+      if (!window.__gmap) {
+        window.__refreshMarkersPending = sites;
+        return;
+      }
+
       (window.__gmarkers || []).forEach(m => m.setMap(null));
       window.__gmarkers = [];
 
@@ -42,9 +93,8 @@
       sites.forEach(site => {
         if (!site.lat || !site.lng) return;
         const color =
-          site.readiness >= 80 ? "#10b981" : // emerald-600
-          site.readiness >= 60 ? "#f59e0b" : // amber-500
-          "#e11d48"; // rose-600
+          site.readiness >= 80 ? "#10b981" :
+          site.readiness >= 60 ? "#f59e0b" : "#e11d48";
 
         const marker = new google.maps.Marker({
           position: { lat: site.lat, lng: site.lng },
@@ -56,16 +106,18 @@
             fillColor: color,
             fillOpacity: 1,
             strokeWeight: 1,
-            strokeColor: "#1f2937" // zinc-800
+            strokeColor: "#111827"
           }
         });
 
         marker.addListener("click", () => {
           iw.setContent(`
-            <div style="font-family:ui-sans-serif;max-width:260px">
+            <div style="font-family:ui-sans-serif;max-width:260px;color:#e5e7eb">
               <div style="font-weight:600">${site.title}</div>
-              <div style="font-size:12px;color:#6b7280">${site.state} • ${site.assetType.replace("_"," ")} • ${site.commodities.join(", ")} • ${site.stage}</div>
-              <div style="font-size:12px;margin-top:4px">
+              <div style="font-size:12px;color:#9ca3af">
+                ${site.state} • ${site.assetType.replace("_"," ")} • ${site.commodities.join(", ")} • ${site.stage}
+              </div>
+              <div style="font-size:12px;margin-top:6px;color:#d1d5db">
                 Readiness: <b>${site.readiness}</b> • Timeline: <b>${site.timelineMonths} mo</b><br/>
                 Capex: <b>${site.capexBand}</b>
               </div>
@@ -82,14 +134,13 @@
     };
   </script>
 </head>
-<body>
+<body class="bg-zinc-900 text-zinc-100">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useMemo, useState, useEffect } = React;
 
-    // --- Seed demo data with coordinates ---
-    // (Dummy coordinates near each state)
+    // Seed demo data with coordinates
     const SITES = [
       { id:"nv-001", title:"Silver Basin Li Project", state:"NV", assetType:"mine",
         commodities:["lithium"], stage:"PFS", readiness:82, timelineMonths:20,
@@ -138,83 +189,99 @@
         ), [query]
       );
 
-      // Keep map markers in sync with current filtered list
       useEffect(() => {
+        // Draw markers for current result set (or stash until map exists)
         if (window.__refreshMarkers) window.__refreshMarkers(filtered);
       }, [filtered]);
 
       return (
-        <div className="min-h-screen bg-zinc-50 text-zinc-900">
-          <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-zinc-200">
+        <div className="min-h-screen bg-zinc-900 text-zinc-100">
+          <header className="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur border-b border-zinc-800">
             <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
               <h1 className="text-xl font-semibold tracking-tight">Colossus Maps — MVP Demo</h1>
-              <div className="text-sm text-zinc-500">Site-intelligence for U.S. critical minerals & industrial reuse</div>
+              <div className="text-sm text-zinc-400">Site-intelligence for U.S. critical minerals & industrial reuse</div>
             </div>
           </header>
 
           <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-12 gap-4">
             {/* Filters */}
-            <aside className="col-span-12 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-zinc-200 p-4">
+            <aside className="col-span-12 lg:col-span-3 bg-zinc-950 rounded-2xl shadow-sm border border-zinc-800 p-4">
               <h2 className="text-sm font-medium mb-3">Filters</h2>
 
               <fieldset className="mb-4">
-                <legend className="text-xs uppercase tracking-wide text-zinc-500 mb-2">States</legend>
+                <legend className="text-xs uppercase tracking-wide text-zinc-400 mb-2">States</legend>
                 <div className="flex flex-wrap gap-2">
                   {STATES.map(st => (
                     <button key={st}
                       onClick={()=>toggleSet(query.states, st, setQuery)}
-                      className={`px-2 py-1 rounded-full text-sm border ${query.states.has(st) ? "bg-zinc-900 text-white border-zinc-900" : "border-zinc-300"}`}>{st}</button>
+                      className={`px-2 py-1 rounded-full text-sm border transition ${
+                        query.states.has(st)
+                          ? "bg-zinc-200 text-zinc-900 border-zinc-200"
+                          : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                      }`}>{st}</button>
                   ))}
                 </div>
               </fieldset>
 
               <fieldset className="mb-4">
-                <legend className="text-xs uppercase tracking-wide text-zinc-500 mb-2">Commodities</legend>
+                <legend className="text-xs uppercase tracking-wide text-zinc-400 mb-2">Commodities</legend>
                 <div className="flex flex-wrap gap-2">
                   {COMMS.map(c => (
                     <button key={c}
                       onClick={()=>toggleSet(query.commodities, c, setQuery)}
-                      className={`px-2 py-1 rounded-full text-sm border ${query.commodities.has(c) ? "bg-white border-zinc-900" : "border-zinc-300"}`}>{c}</button>
+                      className={`px-2 py-1 rounded-full text-sm border transition ${
+                        query.commodities.has(c)
+                          ? "bg-zinc-900 border-emerald-500 text-emerald-300"
+                          : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                      }`}>{c}</button>
                   ))}
                 </div>
               </fieldset>
 
               <fieldset className="mb-4">
-                <legend className="text-xs uppercase tracking-wide text-zinc-500 mb-2">Asset Types</legend>
+                <legend className="text-xs uppercase tracking-wide text-zinc-400 mb-2">Asset Types</legend>
                 <div className="flex flex-wrap gap-2">
                   {TYPES.map(t => (
                     <button key={t}
                       onClick={()=>toggleSet(query.assetTypes, t, setQuery)}
-                      className={`px-2 py-1 rounded-full text-sm border ${query.assetTypes.has(t) ? "bg-white border-zinc-900" : "border-zinc-300"}`}>{t.replace("_"," ")}</button>
+                      className={`px-2 py-1 rounded-full text-sm border transition ${
+                        query.assetTypes.has(t)
+                          ? "bg-zinc-900 border-sky-500 text-sky-300"
+                          : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                      }`}>{t.replace("_"," ")}</button>
                   ))}
                 </div>
               </fieldset>
 
               <div className="mb-4">
-                <label className="text-xs uppercase tracking-wide text-zinc-500 mb-1 block">
-                  Readiness ≥ {query.readinessMin}
+                <label className="text-xs uppercase tracking-wide text-zinc-400 mb-1 block">
+                  Readiness ≥ <span className="text-zinc-200">{query.readinessMin}</span>
                 </label>
                 <input type="range" min="0" max="100" value={query.readinessMin}
                   onChange={e=>setQuery(q=>({...q, readinessMin:Number(e.target.value)}))}
-                  className="w-full" />
+                  className="w-full accent-emerald-500" />
               </div>
 
-              <div className="mb-4">
-                <label className="text-xs uppercase tracking-wide text-zinc-500 mb-1 block">
-                  Timeline ≤ {query.timelineMax} mo
+              <div className="mb-2">
+                <label className="text-xs uppercase tracking-wide text-zinc-400 mb-1 block">
+                  Timeline ≤ <span className="text-zinc-2 00">{query.timelineMax}</span> mo
                 </label>
                 <input type="range" min="6" max="60" step="6" value={query.timelineMax}
                   onChange={e=>setQuery(q=>({...q, timelineMax:Number(e.target.value)}))}
-                  className="w-full" />
+                  className="w-full accent-sky-500" />
               </div>
 
-              <fieldset className="mb-2">
-                <legend className="text-xs uppercase tracking-wide text-zinc-500 mb-2">EJ Risk</legend>
+              <fieldset className="mt-4">
+                <legend className="text-xs uppercase tracking-wide text-zinc-400 mb-2">EJ Risk</legend>
                 <div className="flex gap-2">
                   {["Low","Moderate","High"].map(lvl => (
                     <button key={lvl}
                       onClick={()=>toggleSet(query.ej, lvl, setQuery)}
-                      className={`px-2 py-1 rounded-full text-sm border ${query.ej.has(lvl) ? "bg-white border-zinc-900" : "border-zinc-300"}`}>{lvl}</button>
+                      className={`px-2 py-1 rounded-full text-sm border transition ${
+                        query.ej.has(lvl)
+                          ? "bg-zinc-900 border-amber-400 text-amber-300"
+                          : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                      }`}>{lvl}</button>
                   ))}
                 </div>
               </fieldset>
@@ -222,12 +289,12 @@
 
             {/* Map + Results */}
             <section className="col-span-12 lg:col-span-9 flex flex-col gap-4">
-              <div id="map" className="bg-white h-64 rounded-2xl shadow-sm border border-zinc-200"></div>
+              <div id="map" className="bg-zinc-950 rounded-2xl shadow-sm border border-zinc-800"></div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 {filtered.map(s => <SiteCard key={s.id} site={s} />)}
                 {filtered.length === 0 && (
-                  <div className="p-6 rounded-2xl bg-white border border-dashed border-zinc-300 text-zinc-500">
+                  <div className="p-6 rounded-2xl bg-zinc-950 border border-dashed border-zinc-700 text-zinc-400">
                     No sites match these filters. Try lowering Readiness or extending Timeline.
                   </div>
                 )}
@@ -240,28 +307,28 @@
 
     function SiteCard({ site }) {
       return (
-        <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 flex flex-col gap-3">
+        <div className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-sm p-4 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold leading-tight">{site.title}</h3>
-              <p className="text-sm text-zinc-500">
+              <h3 className="font-semibold leading-tight text-zinc-100">{site.title}</h3>
+              <p className="text-sm text-zinc-400">
                 {site.state} • {site.assetType.replace("_"," ")} • {site.commodities.join(", ")} • {site.stage}
               </p>
             </div>
             <ScoreBadge value={site.readiness} />
           </div>
-          <div className="text-sm text-zinc-700 flex gap-4">
-            <span>Timeline: <strong>{site.timelineMonths} mo</strong></span>
-            <span>Capex: <strong>{site.capexBand}</strong></span>
+          <div className="text-sm text-zinc-300 flex gap-4">
+            <span>Timeline: <strong className="text-zinc-100">{site.timelineMonths} mo</strong></span>
+            <span>Capex: <strong className="text-zinc-100">{site.capexBand}</strong></span>
           </div>
           <div className="flex flex-wrap gap-2">
             {site.tags.map(t => (
-              <span key={t} className="px-2 py-0.5 rounded-full border text-xs">{t}</span>
+              <span key={t} className="px-2 py-0.5 rounded-full border text-xs border-zinc-700 text-zinc-300">{t}</span>
             ))}
           </div>
           <div className="flex gap-2 mt-1">
-            <button className="px-3 py-1.5 rounded-xl bg-zinc-900 text-white text-sm">View Diligence Pack (Sample)</button>
-            <button className="px-3 py-1.5 rounded-xl border text-sm">Request Intro</button>
+            <button className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm">View Diligence Pack (Sample)</button>
+            <button className="px-3 py-1.5 rounded-xl border border-zinc-700 hover:border-zinc-500 text-sm">Request Intro</button>
           </div>
         </div>
       );
@@ -289,8 +356,8 @@
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 
-  <!-- Google Maps JavaScript API (your key + callback) -->
-  <script async defer
+  <!-- Google Maps JavaScript API (defer only; no async to avoid race) -->
+  <script defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZ_wvUHsBJuwTL-TKi6S2-Q1oLdhdAAz4&libraries=places,geometry&callback=initMap">
   </script>
 </body>
