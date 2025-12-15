@@ -12,7 +12,7 @@ export const APP = {
 
 // NEW: type colors
 export const TYPE_COLORS = {
-  industrial_building: '#39FF14', // neon green
+  industrial_building: '#6ee7b7', // neon green
   industrial_shell:    '#60A5FA', // blue
   industrial_land:     '#F59E0B'  // orange
 };

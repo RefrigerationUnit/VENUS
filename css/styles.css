@@ -9,9 +9,9 @@
   --accent-2: #60a5fa;
   --danger: #f43f5e;
   /* asset types */
-  --type-building: #39FF14; /* neon green */
-  --type-shell:    #60A5FA; /* blue */
-  --type-land:     #F59E0B; /* orange */
+  --type-building: #6ee7b7; /* neon green */
+  --type-shell:    #60a5fa; /* blue */
+  --type-land:     #f59e0b; /* orange */
 }
 
 * { box-sizing: border-box; }
@@ -118,31 +118,66 @@ select {
 .select-actions { display:flex; justify-content:flex-end; gap:8px; padding: 6px; border-top: 1px solid var(--border); }
 .select-actions .btn { padding: 6px 10px; }
 
-/* === Type chips (the “asset type” buttons) === */
+/* Type chips: neutral look; colored dot only */
 .chip[data-kind="type"] { position: relative; }
 .chip[data-kind="type"]::before{
   content:""; display:inline-block; width:8px; height:8px; border-radius:50%;
-  margin-right:8px; box-shadow: 0 0 6px currentColor;
+  margin-right:8px; flex: 0 0 auto;
+  background: var(--chip-dot); /* uses custom property below */
+  box-shadow: none; /* <- remove dot glow; set to '0 0 6px var(--chip-dot)' if you want a halo */
 }
-/* assign color via attribute */
-.chip[data-kind="type"][data-type="industrial_building"]{ color: var(--type-building); border-color: var(--type-building); }
-.chip[data-kind="type"][data-type="industrial_shell"]   { color: var(--type-shell);    border-color: var(--type-shell); }
-.chip[data-kind="type"][data-type="industrial_land"]    { color: var(--type-land);     border-color: var(--type-land); }
-/* inactive chips: dim text but keep colored border dot */
-.chip[data-kind="type"]:not(.active){ color: var(--muted); }
-.chip[data-kind="type"]:not(.active)::before{ background: currentColor; opacity:.85; }
-/* active emphasis */
-.chip[data-kind="type"].active{ box-shadow: 0 0 8px currentColor inset, 0 0 6px currentColor; }
 
-/* === Cards: colored border + soft glow per asset type === */
-.card.type-industrial_building{ border-color: var(--type-building); box-shadow: 0 0 0 1px rgba(57,255,20,.55), 0 0 16px rgba(57,255,20,.18); }
-.card.type-industrial_shell   { border-color: var(--type-shell);    box-shadow: 0 0 0 1px rgba(96,165,250,.55), 0 0 16px rgba(96,165,250,.18); }
-.card.type-industrial_land    { border-color: var(--type-land);     box-shadow: 0 0 0 1px rgba(245,158,11,.60), 0 0 16px rgba(245,158,11,.2); }
+/* Active = slightly lighter gray, still neutral text, no glow */
+.chip[data-kind="type"] { color: var(--text); border-color: var(--border); }
+.chip[data-kind="type"].active {
+  background: #2a2b33;                    /* lighter gray when active */
+  border-color: #3a3b44;
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* set the dot color per asset type */
+.chip[data-type="industrial_building"] { --chip-dot: var(--type-building); }
+.chip[data-type="industrial_shell"]    { --chip-dot: var(--type-shell); }
+.chip[data-type="industrial_land"]     { --chip-dot: var(--type-land); }
 
 /* Bookmark button: pale gray with thick white border */
 .btn.bookmark{
-  background: #cfd2d8; color: #111;
-  border: 3px solid #fff; border-radius: 12px;
+  background: #272727; color: #ffffff;
+  border: 2px solid #dad9d9; border-radius: 12px;
   font-weight: 600;
 }
 .btn.bookmark:hover{ filter: brightness(1.05); }
+
+/* Small colored dot shown in card titles */
+.type-dot{
+  display:inline-block; width:10px; height:10px; border-radius:50%;
+  margin-right:8px; vertical-align:middle;
+}
+.type-dot[data-type="industrial_building"]{ background: var(--type-building); box-shadow: 0 0 6px rgba(57,255,20,.35); }
+.type-dot[data-type="industrial_shell"]   { background: var(--type-shell);    box-shadow: 0 0 6px rgba(96,165,250,.35); }
+.type-dot[data-type="industrial_land"]    { background: var(--type-land);     box-shadow: 0 0 6px rgba(245,158,11,.35); }
+
+/* glowing dot used by AdvancedMarkerElement */
+.gm-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #111827;          /* subtle edge */
+}
+
+.card { position: relative; }  /* enable absolute positioning inside */
+
+.type-corner-dot{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* per-asset-type color (with a subtle halo if you like) */
+.type-corner-dot[data-type="industrial_building"]{ background: var(--type-building); box-shadow: 0 0 6px var(--type-building); }
+.type-corner-dot[data-type="industrial_shell"]   { background: var(--type-shell);    box-shadow: 0 0 6px var(--type-shell); }
+.type-corner-dot[data-type="industrial_land"]    { background: var(--type-land);     box-shadow: 0 0 6px var(--type-land); }

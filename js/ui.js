@@ -66,7 +66,6 @@ export function renderCards(sites, container = document.getElementById('cards'),
   sites.forEach(site => {
     const card = document.createElement('article');
     card.className = 'card';
-    card.classList.add(`type-${site.asset_type}`); // NEW: colored border/glow
     card.id = `card-${site.id}`;
     const saved = isBookmarked(site.id);
     card.innerHTML = `
@@ -222,6 +221,7 @@ function flag(v, text){ return v ? `<span class="tag">${text}</span>` : ''; }
 
 function renderBookmarkButton(card, saved){
   const btn = card.querySelector('[data-bookmark]');
-  btn.className = `btn ${saved?'danger':'primary'}`;
+  if (!btn) return;
+  btn.className = 'btn bookmark'; // Fixed natural color
   btn.textContent = saved ? 'Remove Bookmark' : 'Bookmark';
 }
