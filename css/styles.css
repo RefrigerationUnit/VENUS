@@ -100,13 +100,33 @@ select {
   display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 .select-btn .count { color: var(--muted); font-size: 12px; }
+
 .select-menu {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
   width: 320px; max-height: 280px; overflow: auto;
-  background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px;
+  background: rgba(19,19,24,0.8); /* slightly translucent bg */
+  border: 1px solid var(--border); border-radius: 12px;
   box-shadow: 0 6px 22px rgba(0,0,0,.35); padding: 6px;
+
+  /* NEW */
+  display: flex; flex-direction: column;
+  overflow: hidden; /* scrolling will happen in .select-list */
+  backdrop-filter: blur(6px); /* blur bg behind menu */
 }
-.select-list { list-style: none; margin: 0; padding: 4px; }
+
+/* CRITICAL: honor the hidden attribute */
+.select-menu[hidden] {
+  display: none !important;
+}
+
+/* The list id the only scrollable area */
+.select-list { 
+  list-style: none; margin: 0; padding: 4px; 
+
+  flex: 1 1 auto; /* take up available space */
+  overflow: auto; /* enable scrolling */
+}
+
 .select-item {
   display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
 }
@@ -115,7 +135,14 @@ select {
   width: 1.2em; text-align: center; color: var(--accent);
   font-weight: 700;
 }
-.select-actions { display:flex; justify-content:flex-end; gap:8px; padding: 6px; border-top: 1px solid var(--border); }
+.select-actions { 
+  display:flex; justify-content:flex-end; gap:8px; padding: 6px;
+  border-top: 1px solid var(--border);
+
+  position: sticky; bottom: 0;
+  background: rgba(19,19,24,0.8); /* match menu background */
+}
+
 .select-actions .btn { padding: 6px 10px; }
 
 /* Type chips: neutral look; colored dot only */
