@@ -25,24 +25,26 @@ export function renderFilters({ state }, onChange) {
     </select>
   `;
 
-  // State chips
-  const states = ['TX','CA','AZ'];
+  // State chips (dynamic)
   const sc = document.getElementById('state-chips');
-  states.forEach(st => {
+  APP.states.forEach(st => {
     const b = document.createElement('button');
     b.className = 'chip' + (state.filters.states.has(st) ? ' active' : '');
     b.textContent = st;
+    b.dataset.value = st;
+    b.dataset.kind = 'state';
     b.onclick = () => { toggleChip(state.filters.states, st); onChange(); };
     sc.appendChild(b);
   });
 
-  // Type chips
-  const types = ['industrial_building','industrial_shell','industrial_land'];
+  // Type chips (dynamic)
   const tc = document.getElementById('type-chips');
-  types.forEach(t => {
+  APP.assetTypes.forEach(t => {
     const b = document.createElement('button');
     b.className = 'chip' + (state.filters.types.has(t) ? ' active' : '');
     b.textContent = label(t);
+    b.dataset.value = t;
+    b.dataset.kind = 'type';
     b.onclick = () => { toggleChip(state.filters.types, t); onChange(); };
     tc.appendChild(b);
   });

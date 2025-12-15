@@ -84,3 +84,5 @@ select {
 .subtle { color: var(--muted); }
 .links { padding-left: 16px; }
 .links li { margin: 6px 0; }
+
+#state-chips { max-height: 110px; overflow: auto; }
