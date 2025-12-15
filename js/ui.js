@@ -68,23 +68,25 @@ export function renderCards(sites, container = document.getElementById('cards'),
     card.className = 'card';
     card.id = `card-${site.id}`;
     const saved = isBookmarked(site.id);
+
     card.innerHTML = `
-      <h3>${site.name}</h3>
-      <div class="meta">${site.city || ''}${site.city?', ':''}${site.state} • ${label(site.asset_type)}</div>
-      <div class="meta">${fmtSize(site)}${site.clear_height_ft ? ` • Clear ${site.clear_height_ft}′` : ''}</div>
-      <div class="tags">
-        ${site.rail_distance_km!=null ? `<span class="tag">Rail ${site.rail_distance_km} km</span>`:''}
-        ${site.highway_distance_km!=null ? `<span class="tag">Highway ${site.highway_distance_km} km</span>`:''}
-        ${flag(site.power_nearby,'Power nearby')}
-        ${flag(site.water_wastewater_nearby,'Water/Wastewater')}
-      </div>
-      <div class="actions">
-        <a class="btn ghost" href="${site.source_url || '#'}" target="_blank" rel="noreferrer">Source</a>
-        <button class="btn bookmark" data-bookmark>
-          ${saved ? 'Remove Bookmark' : 'Bookmark'}
-        </button>
-      </div>
-    `;
+        <h3>
+          <span class="type-dot" data-type="${site.asset_type}"></span>${site.name}
+        </h3>
+        <div class="meta">${site.city || ''}${site.city ? ', ' : ''}${site.state} • ${label(site.asset_type)}</div>
+        <div class="meta">${fmtSize(site)}${site.clear_height_ft ? ` • Clear ${site.clear_height_ft}′` : ''}</div>
+        <div class="tags">
+          ${site.rail_distance_km!=null ? `<span class="tag">Rail ${site.rail_distance_km} km</span>`:''}
+          ${site.highway_distance_km!=null ? `<span class="tag">Highway ${site.highway_distance_km} km</span>`:''}
+          ${flag(site.power_nearby,'Power nearby')}
+          ${flag(site.water_wastewater_nearby,'Water/Wastewater')}
+        </div>
+        <div class="actions">
+          <a class="btn ghost" href="${site.source_url || '#'}" target="_blank" rel="noreferrer">Source</a>
+          <button class="btn bookmark" data-bookmark>${saved ? 'Remove Bookmark' : 'Bookmark'}</button>
+        </div>
+      `;
+
     card.querySelector('[data-bookmark]').onclick = () => {
       const nowSaved = toggleBookmark(site.id);
       if (onBookmarkToggle) onBookmarkToggle(site.id, nowSaved);

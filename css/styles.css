@@ -163,7 +163,8 @@ select {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 1px solid #111827;  /* subtle edge for dark base map */
+  border: 0;
+  /* border: 1px solid #111827;  subtle edge for dark base map */
 }
 
 .card { position: relative; }  /* enable absolute positioning inside */
