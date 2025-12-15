@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Contacts — Colossus Maps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/favicon.ico" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header id="app-header"></header>
+
+  <main class="page">
+    <h1>Contact</h1>
+    <p>Say hi! I’m Julio. Reach me here:</p>
+    <ul class="links">
+      <li><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+      <li><a href="https://www.linkedin.com/in/your-handle" target="_blank" rel="noreferrer">LinkedIn</a></li>
+      <li><a href="https://github.com/your-handle" target="_blank" rel="noreferrer">GitHub</a></li>
+      <li><a href="https://your-website.example" target="_blank" rel="noreferrer">Website</a></li>
+    </ul>
+  </main>
+
+  <script type="module" src="/js/ui.js"></script>
+  <script type="module">
+    import { buildHeader } from '/js/ui.js';
+    buildHeader('contacts');
+  </script>
+</body>
+</html>

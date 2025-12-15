@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>My Bookmarks — Colossus Maps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/favicon.ico" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header id="app-header"></header>
+
+  <main class="page">
+    <h1>My Bookmarks</h1>
+    <p class="subtle">Saved sites on this device (localStorage).</p>
+    <section id="profile-cards" class="cards"></section>
+  </main>
+
+  <script type="module" src="/js/storage.js"></script>
+  <script type="module" src="/js/ui.js"></script>
+  <script type="module" src="/js/dataLoader.js"></script>
+  <script type="module">
+    import { buildHeader, renderCards } from '/js/ui.js';
+    import { getBookmarks } from '/js/storage.js';
+    import { loadSites } from '/js/dataLoader.js';
+
+    buildHeader('profile');
+
+    const all = await loadSites();
+    const savedIds = new Set(getBookmarks());
+    const savedSites = all.filter(s => savedIds.has(s.id));
+
+    const onBookmarkToggle = (siteId, isNowSaved) => {
+      const container = document.getElementById('profile-cards');
+      const updated = savedSites.filter(s => isNowSaved ? true : s.id !== siteId);
+      renderCards(updated, container, onBookmarkToggle);
+    };
+
+    renderCards(savedSites, document.getElementById('profile-cards'), onBookmarkToggle);
+  </script>
+</body>
+</html>
