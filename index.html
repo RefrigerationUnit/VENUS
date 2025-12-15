@@ -9,6 +9,20 @@
   <link rel="stylesheet" href="./css/map.css" />
 </head>
 <body>
+  <!-- Background network canvas (ID must be bg-net) -->
+  <canvas id="bg-net" aria-hidden="true"></canvas>
+
+  <!-- Optional per-page tuning for the network -->
+  <script>
+    window.NETWORK_OPTS = {
+      color: 'rgba(225,230,240,1)',
+      glowColor: 'rgba(225,230,240,0.55)',
+      // density: 0.00008,
+      // maxConnDist: 160,
+    };
+  </script>
+  <script defer src="./js/network.js"></script>
+
   <header id="app-header"></header>
 
   <main id="app">
@@ -31,8 +45,7 @@
   <script type="module" src="./js/analytics.js"></script>
   <script type="module" src="./js/main.js"></script>
 
-  <!-- Google Maps (restricted API key recommended) -->
+  <!-- Google Maps -->
   <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZ_wvUHsBJuwTL-TKi6S2-Q1oLdhdAAz4&libraries=places,geometry,marker&callback=initMap"></script>
-
 </body>
 </html>
