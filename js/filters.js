@@ -1,5 +1,9 @@
 export const defaultFilter = () => ({
-  states: new Set(['TX','CA','AZ']),
+  states: new Set([
+    'AL','AZ','AR','CA','CO','CT','DE','FL','GA','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI',
+    'MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN',
+    'TX','UT','VT','VA','WA','WV','WI','WY','DC'
+  ]),
   types: new Set(['industrial_building','industrial_shell','industrial_land']),
   search: '',
   sortBy: 'name_asc' // name_asc | size_desc
