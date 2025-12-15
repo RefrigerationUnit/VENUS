@@ -44,6 +44,7 @@ export function renderFilters({ state }, onChange) {
     b.textContent = label(t);
     b.dataset.value = t;
     b.dataset.kind = 'type';
+    b.dataset.type = t; // New: lets CSS color per type
     b.onclick = () => { toggleChip(state.filters.types, t); onChange(); };
     tc.appendChild(b);
   });
@@ -58,11 +59,14 @@ export function renderFilters({ state }, onChange) {
   sort.onchange = () => { state.filters.sortBy = sort.value; onChange(); };
 }
 
+
+
 export function renderCards(sites, container = document.getElementById('cards'), onBookmarkToggle) {
   container.innerHTML = '';
   sites.forEach(site => {
     const card = document.createElement('article');
     card.className = 'card';
+    card.classList.add(`type-${site.asset_type}`); // NEW: colored border/glow
     card.id = `card-${site.id}`;
     const saved = isBookmarked(site.id);
     card.innerHTML = `
@@ -77,7 +81,7 @@ export function renderCards(sites, container = document.getElementById('cards'),
       </div>
       <div class="actions">
         <a class="btn ghost" href="${site.source_url || '#'}" target="_blank" rel="noreferrer">Source</a>
-        <button class="btn ${saved?'danger':'primary'}" data-bookmark>
+        <button class="btn bookmark" data-bookmark>
           ${saved ? 'Remove Bookmark' : 'Bookmark'}
         </button>
       </div>
