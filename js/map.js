@@ -1,14 +1,12 @@
-// /js/map.js
 import { APP, TYPE_COLORS } from './config.js';
 
 let gmap = null;
-let gmarkers = [];       // [{obj, advanced}]
+let gmarkers = [];
 const readyCallbacks = [];
 
 function colorFor(type) {
   return TYPE_COLORS[type] || '#9CA3AF';
 }
-
 function hexToRgba(hex, a = 0.45) {
   const s = hex.replace('#','');
   const n = parseInt(s.length === 3 ? s.split('').map(x => x + x).join('') : s, 16);
@@ -16,72 +14,76 @@ function hexToRgba(hex, a = 0.45) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+// Local dark style (used only when no Map ID is provided)
 const DARK_STYLE = [
   { elementType: "geometry", stylers: [{ color: "#1f2937" }]},
   { elementType: "labels.text.stroke", stylers: [{ color: "#1f2937" }]},
   { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }]},
-  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d1d5db" }]},
-  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#a3a3a3" }]},
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0b3a2b" }]},
-  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#86efac" }]},
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#374151" }]},
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111827" }]},
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#d1d5db" }]},
-  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1f2937" }]},
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }]},
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0b3a2b" }]}
 ];
 
-// Public: register a callback to run once the map is ready.
+// Public: register a callback to run once the map is ready
 export function onMapReady(cb) {
   if (gmap) cb(gmap); else readyCallbacks.push(cb);
 }
 
-// Public: (re)draw markers from a site list
+// Can we use AdvancedMarkerElement?
+function canUseAdvanced() {
+  return !!(
+    APP.useAdvancedMarkers &&
+    APP.mapId &&                                    // requires vector map with Map ID
+    google.maps.marker &&
+    google.maps.marker.AdvancedMarkerElement
+  );
+}
+
+// Public: draw markers
 export function refreshMarkers(sites, onMarkerClick) {
   if (!gmap) return;
 
-  // Clear existing
-  gmarkers.forEach(({ obj, advanced }) => {
-    if (advanced) obj.map = null; else obj.setMap(null);
+  // Clear existing markers
+  gmarkers.forEach(m => {
+    if (m instanceof google.maps.Marker) m.setMap(null);
+    else if (m && 'map' in m) m.map = null; // AdvancedMarkerElement
   });
   gmarkers = [];
 
+  if (!sites || sites.length === 0) return;
+
   const bounds = new google.maps.LatLngBounds();
   const iw = new google.maps.InfoWindow();
-  const Advanced = google.maps.marker && google.maps.marker.AdvancedMarkerElement;
+  const useAdvanced = canUseAdvanced();
 
   sites.forEach(s => {
     const col = colorFor(s.asset_type);
 
-    if (Advanced) {
-      // DOM-based dot with glow (needs .gm-dot CSS in your stylesheet)
+    if (useAdvanced) {
+      // DOM dot with glow
       const dot = document.createElement('div');
-      dot.className = 'gm-dot';
-      // Base color + glow
+      dot.className = 'gm-dot'; // make sure .gm-dot exists in styles.css
       dot.style.background = col;
       dot.style.boxShadow = `0 0 8px ${col}, 0 0 18px ${hexToRgba(col, 0.35)}`;
 
-      const m = new Advanced({
+      const m = new google.maps.marker.AdvancedMarkerElement({
         map: gmap,
         position: { lat: s.lat, lng: s.lon },
         content: dot
       });
 
       m.addListener('click', () => {
-        iw.setContent(`
-          <div style="color:#e6e6ea">
-            <strong>${s.name}</strong><br/>
-            <span style="color:#a1a1aa">${s.city || ''}${s.city ? ', ' : ''}${s.state}</span>
-          </div>
-        `);
-        // InfoWindow with AdvancedMarkerElement anchor syntax
+        iw.setContent(
+          `<div style="color:#e6e6ea"><strong>${s.name}</strong><br/><span style="color:#a1a1aa">${s.city||''}${s.city?', ':''}${s.state}</span></div>`
+        );
         iw.open({ map: gmap, anchor: m });
         onMarkerClick && onMarkerClick(s.id);
       });
 
-      gmarkers.push({ obj: m, advanced: true });
+      gmarkers.push(m);
     } else {
-      // Fallback classic marker (no CSS glow available here)
+      // Classic vector symbol (no DOM glow)
       const m = new google.maps.Marker({
         position: { lat: s.lat, lng: s.lon },
         map: gmap,
@@ -97,17 +99,14 @@ export function refreshMarkers(sites, onMarkerClick) {
       });
 
       m.addListener('click', () => {
-        iw.setContent(`
-          <div style="color:#e6e6ea">
-            <strong>${s.name}</strong><br/>
-            <span style="color:#a1a1aa">${s.city || ''}${s.city ? ', ' : ''}${s.state}</span>
-          </div>
-        `);
+        iw.setContent(
+          `<div style="color:#e6e6ea"><strong>${s.name}</strong><br/><span style="color:#a1a1aa">${s.city||''}${s.city?', ':''}${s.state}</span></div>`
+        );
         iw.open(gmap, m);
         onMarkerClick && onMarkerClick(s.id);
       });
 
-      gmarkers.push({ obj: m, advanced: false });
+      gmarkers.push(m);
     }
 
     bounds.extend(new google.maps.LatLng(s.lat, s.lon));
@@ -116,25 +115,26 @@ export function refreshMarkers(sites, onMarkerClick) {
   if (!bounds.isEmpty()) gmap.fitBounds(bounds);
 }
 
-// Google’s callback must be global, so attach it to window.
-// This will be invoked by the script tag in index.html.
-window.initMap = function initMap() {
+// Define and expose the global initMap callback used by the script tag
+function initMap() {
   const el = document.getElementById('map');
   if (!el) return;
 
-  gmap = new google.maps.Map(el, {
+  const opts = {
     center: { lat: APP.mapDefaults.lat, lng: APP.mapDefaults.lon },
     zoom: APP.mapDefaults.zoom,
     mapTypeControl: false,
     streetViewControl: false,
     fullscreenControl: true,
-    styles: DARK_STYLE,
-    backgroundColor: '#0b0b0e'
-  });
+    backgroundColor: '#0b0b0e',
+    ...(APP.mapId ? { mapId: APP.mapId } : { styles: DARK_STYLE })
+  };
 
-  // Flush any queued callbacks
+  gmap = new google.maps.Map(el, opts);
+
+  // Flush queued callbacks
   while (readyCallbacks.length) {
-    const cb = readyCallbacks.shift();
-    try { cb(gmap); } catch (e) { console.error(e); }
+    try { readyCallbacks.shift()(gmap); } catch (e) { console.error(e); }
   }
-};
+}
+window.initMap = initMap;
