@@ -6,9 +6,9 @@ export function buildHeader(active = 'home') {
   el.innerHTML = `
     <div class="brand">${APP.name}</div>
     <nav>
-      <a href="/index.html" class="${active==='home'?'active':''}">Home</a>
-      <a href="/contacts.html" class="${active==='contacts'?'active':''}">Contacts</a>
-      <a href="/profile.html" class="${active==='profile'?'active':''}">Profile</a>
+      <a href="./index.html" class="${active==='home'?'active':''}">Home</a>
+      <a href="./contacts.html" class="${active==='contacts'?'active':''}">Contacts</a>
+      <a href="./profile.html" class="${active==='profile'?'active':''}">Profile</a>
     </nav>
   `;
 }

@@ -23,7 +23,8 @@ function onBookmarkToggle() {
 
 renderFilters({ state }, () => render());
 
-state.sites = await loadSites();
-
-onMapReady(() => render());  // waits for Google map before drawing markers
-render();                    // render list immediately (map updates once ready)
+(async function init() {
+  state.sites = await loadSites();
+  onMapReady(() => render());  // waits for Google map before drawing markers
+  render();                    // render list immediately (map updates once ready)
+})();
