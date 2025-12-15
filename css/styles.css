@@ -86,3 +86,30 @@ select {
 .links li { margin: 6px 0; }
 
 #state-chips { max-height: 110px; overflow: auto; }
+
+/* Multi-select dropdown */
+.multiselect { position: relative; }
+.select-btn {
+  background: var(--bg-elev); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 12px; cursor: pointer; min-width: 220px;
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.select-btn .count { color: var(--muted); font-size: 12px; }
+.select-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+  width: 320px; max-height: 280px; overflow: auto;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.35); padding: 6px;
+}
+.select-list { list-style: none; margin: 0; padding: 4px; }
+.select-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+}
+.select-item:hover { background: #1a1b22; }
+.select-item .check {
+  width: 1.2em; text-align: center; color: var(--accent);
+  font-weight: 700;
+}
+.select-actions { display:flex; justify-content:flex-end; gap:8px; padding: 6px; border-top: 1px solid var(--border); }
+.select-actions .btn { padding: 6px 10px; }

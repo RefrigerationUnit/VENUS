@@ -16,7 +16,7 @@ export function buildHeader(active = 'home') {
 export function renderFilters({ state }, onChange) {
   const el = document.getElementById('filters');
   el.innerHTML = `
-    <div class="chipbar" id="state-chips"></div>
+    <div class="multiselect" id="state-select"></div>
     <div class="chipbar" id="type-chips"></div>
     <input id="search" type="search" placeholder="Search name or city…" />
     <select id="sort">
@@ -25,16 +25,15 @@ export function renderFilters({ state }, onChange) {
     </select>
   `;
 
-  // State chips (dynamic)
-  const sc = document.getElementById('state-chips');
-  APP.states.forEach(st => {
-    const b = document.createElement('button');
-    b.className = 'chip' + (state.filters.states.has(st) ? ' active' : '');
-    b.textContent = st;
-    b.dataset.value = st;
-    b.dataset.kind = 'state';
-    b.onclick = () => { toggleChip(state.filters.states, st); onChange(); };
-    sc.appendChild(b);
+  // ——— NEW: build the states dropdown ———
+  buildStatesDropdown({
+    mountId: 'state-select',
+    selected: state.filters.states,
+    options: APP.states,          // uses your config.js list
+    onApply: (nextSet) => {       // OK pressed
+      state.filters.states = nextSet;
+      onChange();
+    }
   });
 
   // Type chips (dynamic)
@@ -102,6 +101,104 @@ export function highlightCard(siteId) {
   el.classList.add('highlight');
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(() => el.classList.remove('highlight'), 1200);
+}
+
+function buildStatesDropdown({ mountId, selected, options, onApply }) {
+  const mount = document.getElementById(mountId);
+  if (!mount) return;
+
+  // Button
+  const btn = document.createElement('button');
+  btn.className = 'select-btn';
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = 'States';
+  const countSpan = document.createElement('span');
+  countSpan.className = 'count';
+  countSpan.textContent = `(${selected.size} selected)`;
+  const caret = document.createElement('span');
+  caret.textContent = '▾';
+  btn.append(labelSpan, countSpan, caret);
+
+  // Menu (hidden initially)
+  const menu = document.createElement('div');
+  menu.className = 'select-menu';
+  menu.hidden = true;
+
+  const list = document.createElement('ul');
+  list.className = 'select-list';
+
+  // Render items from a TEMP copy (only commit on OK)
+  const temp = new Set(Array.from(selected));
+
+  function renderList() {
+    list.innerHTML = '';
+    options.forEach(st => {
+      const li = document.createElement('li');
+      li.className = 'select-item';
+      li.dataset.value = st;
+      const check = document.createElement('span');
+      check.className = 'check';
+      check.textContent = temp.has(st) ? '✓' : '';
+      const text = document.createElement('span');
+      text.className = 'label';
+      text.textContent = st;
+      li.append(check, text);
+      li.onclick = () => {
+        if (temp.has(st)) temp.delete(st); else temp.add(st);
+        check.textContent = temp.has(st) ? '✓' : '';
+      };
+      list.appendChild(li);
+    });
+  }
+  renderList();
+
+  const actions = document.createElement('div');
+  actions.className = 'select-actions';
+  const ok = document.createElement('button');
+  ok.className = 'btn primary';
+  ok.textContent = 'OK';
+  const cancel = document.createElement('button');
+  cancel.className = 'btn';
+  cancel.textContent = 'Cancel';
+  actions.append(ok, cancel);
+
+  menu.append(list, actions);
+  mount.append(btn, menu);
+
+  function openMenu() {
+    // sync from current selection each time you open
+    temp.clear(); selected.forEach(v => temp.add(v));
+    renderList();
+    menu.hidden = false;
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKey);
+  }
+  function closeMenu() {
+    menu.hidden = true;
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onKey);
+  }
+  function onDocClick(e) {
+    if (!menu.hidden && !mount.contains(e.target)) {
+      // click outside = Cancel semantics (no apply)
+      closeMenu();
+    }
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') closeMenu(); // ESC = cancel
+  }
+
+  btn.onclick = () => {
+    if (menu.hidden) openMenu(); else closeMenu();
+  };
+  ok.onclick = () => {
+    // Commit
+    const next = new Set(Array.from(temp));
+    onApply(next);
+    countSpan.textContent = `(${next.size} selected)`;
+    closeMenu();
+  };
+  cancel.onclick = () => closeMenu();
 }
 
 /* helpers */
