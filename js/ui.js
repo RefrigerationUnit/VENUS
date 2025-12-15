@@ -2,6 +2,7 @@
 import { APP } from './config.js';
 import { isBookmarked, toggleBookmark } from './storage.js';
 
+/* ---------- Header ---------- */
 export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
   el.innerHTML = `
@@ -14,6 +15,7 @@ export function buildHeader(active = 'home') {
   `;
 }
 
+/* ---------- Filters bar ---------- */
 export function renderFilters({ state }, onChange) {
   const el = document.getElementById('filters');
   el.innerHTML = `
@@ -45,7 +47,7 @@ export function renderFilters({ state }, onChange) {
     b.textContent = label(t);
     b.dataset.value = t;
     b.dataset.kind = 'type';
-    b.dataset.type = t; // lets CSS color the dot
+    b.dataset.type = t; // allows CSS dot color
     b.onclick = () => { toggleChip(state.filters.types, t); onChange(); };
     tc.appendChild(b);
   });
@@ -60,6 +62,7 @@ export function renderFilters({ state }, onChange) {
   sort.onchange = () => { state.filters.sortBy = sort.value; onChange(); };
 }
 
+/* ---------- Cards ---------- */
 export function renderCards(sites, container = document.getElementById('cards'), onBookmarkToggle) {
   container.innerHTML = '';
   sites.forEach(site => {
@@ -89,7 +92,7 @@ export function renderCards(sites, container = document.getElementById('cards'),
     const bm = card.querySelector('[data-bookmark]');
     bm.onclick = () => {
       const nowSaved = toggleBookmark(site.id);
-      if (onBookmarkToggle) onBookmarkToggle(card.id, nowSaved);
+      if (onBookmarkToggle) onBookmarkToggle(site.id, nowSaved); // pass site.id (not card id)
       renderBookmarkButton(card, nowSaved);
     };
 
@@ -135,7 +138,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   // Popover menu
   const menu = document.createElement('div');
   menu.className = 'select-menu';
-  menu.hidden = true; // important; CSS honors [hidden]
+  menu.hidden = true; // CSS respects [hidden]
 
   const list = document.createElement('ul');
   list.className = 'select-list';
@@ -167,10 +170,9 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
       list.appendChild(li);
     });
   }
-
   renderList();
 
-  // Sticky actions inside the menu
+  // Sticky actions inside the menu (OK / Cancel)
   const actions = document.createElement('div');
   actions.className = 'select-actions';
 
@@ -188,7 +190,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   // Mount the button + menu
   mount.append(btn, menu);
 
-  // Bulk actions below (outside menu)
+  // Bulk actions below (outside menu): Clear all / Select all
   const bulk = document.createElement('div');
   bulk.className = 'select-bulk';
   bulk.innerHTML = `
@@ -197,21 +199,32 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   `;
   mount.appendChild(bulk);
 
-  // Wire up bulk actions (apply immediately)
-  bulk.querySelector('[data-bulk="clear"]').onclick = () => {
-    const next = new Set();
-    onApply(next);
-    countSpan.textContent = `(0 selected)`;
-  };
-  bulk.querySelector('[data-bulk="select"]').onclick = () => {
-    const next = new Set(options);
-    onApply(next);
-    countSpan.textContent = `(${next.size} selected)`;
-  };
+// CLEAR ALL — mutate in place, re-render ticks, then refresh app
+bulk.querySelector('[data-bulk="clear"]').onclick = (e) => {
+  e.preventDefault();
+  selected.clear();      // mutate original Set
+  temp.clear();          // keep open menu ticks in sync
+  countSpan.textContent = `(0 selected)`;
+  renderList();          // redraw ✓ instantly
+  onApply(selected);     // triggers onChange -> filters + map update
+};
+
+// SELECT ALL — mutate in place, re-render ticks, then refresh app
+bulk.querySelector('[data-bulk="select"]').onclick = (e) => {
+  e.preventDefault();
+  selected.clear();
+  options.forEach(v => selected.add(v));  // fill original Set
+  temp.clear();
+  options.forEach(v => temp.add(v));
+  countSpan.textContent = `(${selected.size} selected)`;
+  renderList();
+  onApply(selected);     // triggers onChange -> filters + map update
+};
+
 
   // Open/close behavior
   function openMenu() {
-    temp.clear(); selected.forEach(v => temp.add(v)); // sync
+    temp.clear(); selected.forEach(v => temp.add(v)); // sync from current selection
     renderList();
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
