@@ -10,6 +10,12 @@ export function buildHeader(active = 'home') {
     <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </button>
+
+
+    <!-- Particle Sphere lives **inside** header so it won't be wiped -->
+    <div id="orb-sphere" class="orb-container" role="button" tabindex="0"
+         aria-label="Open animated sphere"></div>
+
   `;
 
   // Create the floating panel once (as a body child)

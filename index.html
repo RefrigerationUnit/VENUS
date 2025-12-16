@@ -23,7 +23,11 @@
   </script>
   <script defer src="./js/network.js"></script>
 
-  <header id="app-header"></header>
+  <header id="app-header">
+    <!-- Particle Sphere (header button) -->
+    <div id="orb-sphere" class="orb-container"></div>
+
+  </header>
 
   <main id="app">
     <section class="toolbar" id="filters"></section>
@@ -34,6 +38,10 @@
     </section>
     <section id="cards" class="cards"></section>
   </main>
+
+  <!-- Three.js + orb logic -->
+  <!-- <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script> -->
+  <script type="module" src="./js/orb.js"></script>
 
   <!-- App scripts (ES modules) -->
   <script type="module" src="./js/config.js"></script>
