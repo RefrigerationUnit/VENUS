@@ -6,17 +6,31 @@ import { isBookmarked, toggleBookmark } from './storage.js';
 export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
   el.innerHTML = `
-    <div class="brand">${APP.name}</div>
+    <div class="brand">
+      <div id="orb-sphere" class="orb-container in-brand" role="button" tabindex="0"
+           aria-label="Open animated sphere" style="pointer-events: none;"></div>
+      <span class="logo-bubble">${APP.name}</span>
+    </div>
     <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </button>
-
-
-    <!-- Particle Sphere lives **inside** header so it won't be wiped -->
-    <div id="orb-sphere" class="orb-container" role="button" tabindex="0"
-         aria-label="Open animated sphere"></div>
-
   `;
+
+  const bubble = el.querySelector('.logo-bubble');
+const headerRect = () => el.getBoundingClientRect();
+function moveSheen(e) {
+  const r = headerRect();
+  const x = ((e.clientX - r.left) / Math.max(1, r.width)) * 100;
+  const y = ((e.clientY - r.top) / Math.max(1, r.height)) * 100;
+  bubble.style.setProperty('--mx', x + '%');
+  bubble.style.setProperty('--my', y + '%');
+}
+el.addEventListener('pointermove', moveSheen, { passive: true });
+el.addEventListener('pointerleave', () => {
+  bubble.style.setProperty('--mx', '50%');
+  bubble.style.setProperty('--my', '40%');
+}, { passive: true });
+
 
   // Create the floating panel once (as a body child)
   let panel = document.getElementById('menu-panel');

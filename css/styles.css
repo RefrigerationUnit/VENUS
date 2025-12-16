@@ -33,6 +33,24 @@
   --orb-overlay-alpha: .25;  /* dim bg when fullscreen (0..1) */
   --orb-z: 200;              /* header z-index for the orb */
   --orb-z-fs: 2000;          /* fullscreen z-index */
+
+  /* HEADER TITLE EDITS */
+    /* Size & spacing */
+  --brand-size: clamp(22px, 3.2vw, 40px);
+  --brand-weight: 800;
+  --brand-letterspace: .16em;
+
+  /* Stroke & shadows */
+  --brand-stroke: 1px;                 /* outline thickness */
+  --brand-shadow: 0 8px 24px rgba(0,0,0,.35);
+
+  /* Tint & shine (edit these to recolor) */
+  --brand-tint: 210 30% 72%;           /* HSL for subtle bluish tint */
+  --brand-core: 0 0% 100%;             /* core highlight color (white) */
+
+  /* Specular highlight position (JS updates these) */
+  --mx: 50%;
+  --my: 40%;
 }
 
 * { box-sizing: border-box; }
@@ -58,7 +76,16 @@ header {
 }
 header:hover { background: rgb(19 19 24 / calc(var(--header-alpha) + .08)); }
 
-header .brand { font-weight: 700; letter-spacing: .2px; }
+header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+header .brand .orb-container.in-brand {
+  flex-shrink: 0;
+}
 
 nav a {
   color: var(--muted);
@@ -372,3 +399,77 @@ body .menu-panel{
   opacity: 1; transform: translateY(0);
   pointer-events: auto; cursor: pointer;
 }
+
+/* LOGO BUBBLE */
+.logo-bubble{
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  text-transform: uppercase; /* you’re already using caps */
+  letter-spacing: var(--brand-letterspace);
+  font-weight: var(--brand-weight);
+  font-size: var(--brand-size);
+
+  /* We’ll paint with backgrounds clipped into the glyphs */
+  color: transparent;
+  -webkit-text-stroke: var(--brand-stroke) rgba(255,255,255,.22);
+
+  /* Layered gradients clipped to text for a glass look */
+  background:
+    /* moving specular dot (radial) */
+    radial-gradient(120px 80px at var(--mx) var(--my),
+      hsl(var(--brand-core) / .95) 0%,
+      hsl(var(--brand-core) / .25) 35%,
+      transparent 60%) no-repeat,
+
+    /* soft vertical gloss stack */
+    linear-gradient(180deg,
+      hsl(var(--brand-core) / .88) 0%,
+      hsl(var(--brand-core) / .55) 14%,
+      hsl(var(--brand-core) / .18) 36%,
+      hsl(var(--brand-core) / .10) 55%,
+      hsl(var(--brand-core) / .16) 72%,
+      hsl(var(--brand-core) / .42) 100%) no-repeat,
+
+    /* base tint */
+    linear-gradient(180deg,
+      hsl(var(--brand-tint) / .85),
+      hsl(var(--brand-tint) / .35)) no-repeat;
+
+  background-clip: text, text, text;
+  -webkit-background-clip: text;
+
+  /* float above a bit */
+  filter: drop-shadow(var(--brand-shadow));
+}
+
+/* Optional: a subtle glass capsule behind the text (toggle if you like) */
+.logo-bubble::before{
+  content:"";
+  position:absolute; inset:-6px -12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,.18) 0%,
+    rgba(255,255,255,0) 45%);
+  opacity: .18;
+  pointer-events: none;
+  /* mask so it only shows around the letters, not inside them */
+  -webkit-mask: radial-gradient(90% 100% at 0% 0%, #000 0 70%, transparent 100%);
+          mask: radial-gradient(90% 100% at 0% 0%, #000 0 70%, transparent 100%);
+}
+
+/* (Optional) animated sheen sweep — comment out if you prefer static */
+@keyframes brand-sheen {
+  from { background-position: -200% 0, 0 0, 0 0; }
+  to   { background-position: 200% 0, 0 0, 0 0; }
+}
+@media (prefers-reduced-motion: no-preference){
+  .logo-bubble{
+    background-size:
+      300% 300%, /* radial layer gets panned for a slow shimmer */
+      100% 100%,
+      100% 100%;
+    animation: brand-sheen 14s linear infinite;
+  }
+}
+
