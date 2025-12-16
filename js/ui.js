@@ -41,7 +41,7 @@ el.addEventListener('pointerleave', () => {
     panel.innerHTML = `
       <a class="item ${active==='home'?'active':''}" href="./index.html">Home</a>
       <a class="item ${active==='contacts'?'active':''}" href="./contacts.html">Contacts</a>
-      <a class="item ${active==='profile'?'active':''}" href="./profile.html">Profile</a>
+      <a class="item ${active==='profile'?'active':''}" href="./profile.html">User Profile</a>
     `;
     document.body.appendChild(panel);
   }

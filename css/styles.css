@@ -542,3 +542,34 @@ body .menu-panel{
   cursor: pointer;
   user-select: none;
 }
+
+/* FOOTER */
+/* Make layout support a sticky footer */
+body{
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* full-height page */
+}
+main#app{ flex: 1 0 auto; }   /* content grows */
+.site-footer{ flex: 0 0 auto; }
+
+/* Footer style */
+.site-footer{
+  background: transparent;     /* no background */
+  color: var(--muted);         /* subtle text */
+  font-size: 12px;             /* small */
+  text-align: center;
+  padding: 10px 12px;
+  margin-top: 12px;
+  z-index: 1;                  /* above bg canvas */
+}
+
+/* Link styling in footer */
+.site-footer a{
+  color: inherit;              /* same muted color */
+  text-decoration: underline;  /* subtle affordance */
+  text-underline-offset: 2px;
+}
+.site-footer a:hover{
+  color: var(--text);          /* brighten on hover */
+}
