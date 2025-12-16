@@ -7,13 +7,53 @@ export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
   el.innerHTML = `
     <div class="brand">${APP.name}</div>
-    <nav>
-      <a href="./index.html" class="${active==='home'?'active':''}">Home</a>
-      <a href="./contacts.html" class="${active==='contacts'?'active':''}">Contacts</a>
-      <a href="./profile.html" class="${active==='profile'?'active':''}">Profile</a>
-    </nav>
+
+    <button id="menu-toggle"
+            class="menu-toggle"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-label="Open menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <div id="menu-panel" class="menu-panel" hidden>
+      <a href="./index.html"     class="item ${active==='home'?'active':''}">Home</a>
+      <a href="./contacts.html"  class="item ${active==='contacts'?'active':''}">Contacts</a>
+      <a href="./profile.html"   class="item ${active==='profile'?'active':''}">Profile</a>
+    </div>
   `;
+
+  const toggle = el.querySelector('#menu-toggle');
+  const panel  = el.querySelector('#menu-panel');
+
+  function openMenu() {
+    panel.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => panel.classList.add('in'));
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKey);
+  }
+  function closeMenu() {
+    panel.classList.remove('in');
+    toggle.setAttribute('aria-expanded', 'false');
+    // end the transition cleanly
+    setTimeout(() => { panel.hidden = true; }, 120);
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onKey);
+  }
+  function onDocClick(e) {
+    if (!panel.contains(e.target) && !toggle.contains(e.target)) closeMenu();
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') closeMenu();
+  }
+
+  toggle.onclick = () => (panel.hidden ? openMenu() : closeMenu());
+  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 }
+
 
 /* ---------- Filters bar ---------- */
 export function renderFilters({ state }, onChange) {

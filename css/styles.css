@@ -8,30 +8,47 @@
   --accent: #6ee7b7;
   --accent-2: #60a5fa;
   --danger: #f43f5e;
+
   /* asset types */
   --type-building: #6ee7b7; /* neon green */
   --type-shell:    #60a5fa; /* blue */
   --type-land:     #f59e0b; /* orange */
 
-  /* tweak this number to taste: 0.35 (more transparent) … 0.85 (more solid) */
+  /* card translucency */
   --card-alpha: .55;
-  --card-rgb: 21 22 27;   /* #15161b as RGB for modern rgb()/alpha syntax */
+  --card-rgb: 21 22 27;   /* #15161b as RGB */
   --border-rgb: 38 39 46; /* #26272e */
+
+  /* header translucency */
+  --header-alpha: .01;   /* 0 = fully transparent, 1 = opaque */
+  --header-blur: 3px;   /* blur amount */
+
+  /* Burger menu */
+   --menu-alpha: .60;   /* translucency of the dropdown (0..1) */
+  --menu-blur:  5px;  /* how foggy the blur is */
 }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
-  margin: 0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-  background: var(--bg); color: var(--text);
+  margin: 0;
+  font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
 }
 
+/* ===== Header ===== */
 header {
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: rgba(19,19,24,0.85);
-  border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);
+  padding: 12px 16px;
+  background: rgb(19 19 24 / var(--header-alpha));
+  border-bottom: 1px solid rgb(38 39 46 / .7);
+  backdrop-filter: blur(var(--header-blur)) saturate(1.05);
+  -webkit-backdrop-filter: blur(var(--header-blur)) saturate(1.05);
 }
+header:hover { background: rgb(19 19 24 / calc(var(--header-alpha) + .08)); }
+
 header .brand { font-weight: 700; letter-spacing: .2px; }
 nav a {
   color: var(--muted); text-decoration: none; margin-left: 16px; padding: 6px 10px;
@@ -39,6 +56,7 @@ nav a {
 }
 nav a.active, nav a:hover { color: var(--text); border-color: var(--border); background: var(--bg-elev); }
 
+/* ===== Layout ===== */
 main#app { max-width: 1180px; margin: 0 auto; padding: 16px; }
 
 .toolbar {
@@ -46,6 +64,7 @@ main#app { max-width: 1180px; margin: 0 auto; padding: 16px; }
   align-items: center; margin-bottom: 10px;
 }
 .toolbar .chipbar { display: flex; flex-wrap: wrap; gap: 6px; }
+
 .chip {
   padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border);
   background: var(--bg-elev); color: var(--text); cursor: pointer;
@@ -67,24 +86,28 @@ select {
   color: var(--muted);
 }
 
+/* ===== Cards ===== */
 .cards {
   display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 12px;
 }
 .card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+
+  /* translucent “glass” card */
   background: rgba(21,22,27,var(--card-alpha));
-
-  /* modern syntax (will override the line above in capable browsers) */
-  background: rgb(var(--card-rgb) / var(--card-alpha));
-
+  background: rgb(var(--card-rgb) / var(--card-alpha)); /* modern override */
   border-color: rgb(var(--border-rgb) / .45);
   backdrop-filter: blur(6px) saturate(1.05);
-  -webkit-backdrop-filter: blur(6px) saturate(1.05); /* Safari */
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
 }
 .card h3 { margin: 0 0 6px; font-size: 16px; }
 .card .meta { color: var(--muted); font-size: 12px; }
 .card .tags { margin-top: 8px; display:flex; flex-wrap: wrap; gap: 6px; }
+
 .tag { border: 1px solid var(--border); padding: 3px 8px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+
 .actions { display:flex; gap:8px; margin-top:10px; }
 .btn {
   padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border);
@@ -104,7 +127,7 @@ select {
 
 #state-chips { max-height: 110px; overflow: auto; }
 
-/* Multi-select dropdown */
+/* ===== Multiselect (States) ===== */
 .multiselect { position: relative; }
 .select-btn {
   background: var(--bg-elev); color: var(--text);
@@ -116,28 +139,21 @@ select {
 
 .select-menu {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
-  width: 320px; max-height: 280px; overflow: auto;
-  background: rgba(19,19,24,0.8); /* slightly translucent bg */
+  width: 320px; max-height: 280px;
+  background: rgba(19,19,24,0.8); /* translucent */
   border: 1px solid var(--border); border-radius: 12px;
   box-shadow: 0 6px 22px rgba(0,0,0,.35); padding: 6px;
 
-  /* NEW */
   display: flex; flex-direction: column;
-  overflow: hidden; /* scrolling will happen in .select-list */
-  backdrop-filter: blur(6px); /* blur bg behind menu */
+  overflow: hidden;                /* scrolling happens in .select-list */
+  backdrop-filter: blur(6px);
 }
+/* CRITICAL: honor the [hidden] attribute */
+.select-menu[hidden] { display: none !important; }
 
-/* CRITICAL: honor the hidden attribute */
-.select-menu[hidden] {
-  display: none !important;
-}
-
-/* The list id the only scrollable area */
-.select-list { 
-  list-style: none; margin: 0; padding: 4px; 
-
-  flex: 1 1 auto; /* take up available space */
-  overflow: auto; /* enable scrolling */
+.select-list {
+  list-style: none; margin: 0; padding: 4px;
+  flex: 1 1 auto; overflow: auto;  /* only this area scrolls */
 }
 
 .select-item {
@@ -148,40 +164,34 @@ select {
   width: 1.2em; text-align: center; color: var(--accent);
   font-weight: 700;
 }
-.select-actions { 
+
+.select-actions {
   display:flex; justify-content:flex-end; gap:8px; padding: 6px;
   border-top: 1px solid var(--border);
-
   position: sticky; bottom: 0;
-  background: rgba(19,19,24,0.8); /* match menu background */
+  background: rgba(19,19,24,0.8);
 }
-
 .select-actions .btn { padding: 6px 10px; }
 
-/* Type chips: neutral look; colored dot only */
+/* ===== Chips (type) ===== */
 .chip[data-kind="type"] { position: relative; }
 .chip[data-kind="type"]::before{
   content:""; display:inline-block; width:8px; height:8px; border-radius:50%;
   margin-right:8px; flex: 0 0 auto;
-  background: var(--chip-dot); /* uses custom property below */
-  box-shadow: none; /* <- remove dot glow; set to '0 0 6px var(--chip-dot)' if you want a halo */
-}
-
-/* Active = slightly lighter gray, still neutral text, no glow */
-.chip[data-kind="type"] { color: var(--text); border-color: var(--border); }
-.chip[data-kind="type"].active {
-  background: #2a2b33;                    /* lighter gray when active */
-  border-color: #3a3b44;
-  color: var(--text);
+  background: var(--chip-dot); /* colored dot only */
   box-shadow: none;
 }
+.chip[data-kind="type"] { color: var(--text); border-color: var(--border); }
+.chip[data-kind="type"].active {
+  background: #2a2b33; border-color: #3a3b44; color: var(--text);
+}
 
-/* set the dot color per asset type */
+/* per-asset-type color for chip dots */
 .chip[data-type="industrial_building"] { --chip-dot: var(--type-building); }
 .chip[data-type="industrial_shell"]    { --chip-dot: var(--type-shell); }
 .chip[data-type="industrial_land"]     { --chip-dot: var(--type-land); }
 
-/* Bookmark button: pale gray with thick white border */
+/* ===== Bookmark button ===== */
 .btn.bookmark{
   background: #272727; color: #ffffff;
   border: 2px solid #dad9d9; border-radius: 12px;
@@ -189,7 +199,7 @@ select {
 }
 .btn.bookmark:hover{ filter: brightness(1.05); }
 
-/* Small colored dot shown in card titles */
+/* ===== Type dot in card titles ===== */
 .type-dot{
   display:inline-block; width:10px; height:10px; border-radius:50%;
   margin-right:8px; vertical-align:middle;
@@ -198,43 +208,64 @@ select {
 .type-dot[data-type="industrial_shell"]   { background: var(--type-shell);    box-shadow: 0 0 6px rgba(96,165,250,.35); }
 .type-dot[data-type="industrial_land"]    { background: var(--type-land);     box-shadow: 0 0 6px rgba(245,158,11,.35); }
 
-/* glowing dot used by AdvancedMarkerElement */
+/* ===== Map marker DOM dot (AdvancedMarkerElement) ===== */
 .gm-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 0;
-  /* border: 1px solid #111827;  subtle edge for dark base map */
+  width: 12px; height: 12px; border-radius: 50%; border: 0;
 }
 
-.card { position: relative; }  /* enable absolute positioning inside */
-
+/* ===== Corner dot (if you re-enable it) ===== */
+.card { position: relative; }
 .type-corner-dot{
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
 }
-
-/* per-asset-type color (with a subtle halo if you like) */
 .type-corner-dot[data-type="industrial_building"]{ background: var(--type-building); box-shadow: 0 0 6px var(--type-building); }
 .type-corner-dot[data-type="industrial_shell"]   { background: var(--type-shell);    box-shadow: 0 0 6px var(--type-shell); }
 .type-corner-dot[data-type="industrial_land"]    { background: var(--type-land);     box-shadow: 0 0 6px var(--type-land); }
 
-/* Full-page animated network background */
+/* ===== Full-page animated network background ===== */
 #bg-net{
-  position: fixed;
-  inset: 0;                /* top:0; right:0; bottom:0; left:0 */
-  width: 100%;
-  height: 100%;
-  z-index: 0;              /* stay behind content */
-  pointer-events: none;    /* clicks pass through */
-  background: transparent; /* or var(--bg) if you want a tint */
-  opacity: 0.3;           /* adjust visibility */
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none; background: transparent; opacity: .3;
 }
-
 /* Ensure app content sits above the canvas */
-header{ position: sticky; z-index: 10; }
 main#app{ position: relative; z-index: 1; }
+
+/* ===== Burger menu ===== */
+.menu-toggle{
+  display: inline-flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+  width: 40px; height: 36px;
+  border: 0;                       /* no white border */
+  border-radius: 10px;
+  background: rgb(19 19 24 / .6);  /* subtle glass pill */
+  cursor: pointer; color: var(--text);
+}
+.menu-toggle .bar{ width: 20px; height: 2px; background: var(--text); border-radius: 2px; display: block; }
+.menu-toggle:focus, .menu-toggle:focus-visible{ outline: none; box-shadow: none; }
+
+/* Dropdown panel (0.8 translucent) */
+.menu-panel{
+  position: absolute; right: 16px; top: calc(100% + 8px);
+  min-width: 180px; padding: 6px;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: rgba(19,19,24,0.80);
+  backdrop-filter: blur(8px) saturate(1.02);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  transform: translateY(-4px); opacity: 0;
+  transition: transform .12s ease, opacity .12s ease;
+  z-index: 20;
+}
+.menu-panel.in{ transform: translateY(0); opacity: 1; }
+.menu-panel .item{ display:block; padding:10px 12px; border-radius: 8px; color: var(--text); text-decoration: none; }
+.menu-panel .item:hover{ background: #1a1b22; }
+.menu-panel .item.active{ color: var(--accent); }
+
+/* ===== FINAL GUARDED OVERRIDE =====
+   Ensures translucent header wins even if map.css styles `header` later. */
+body header#app-header{
+  background: rgb(19 19 24 / var(--header-alpha));
+  border-bottom: 1px solid rgb(38 39 46 / 0.45);
+  backdrop-filter: blur(var(--header-blur)) saturate(1.05);
+  -webkit-backdrop-filter: blur(var(--header-blur)) saturate(1.05);
+  z-index: 50;
+}
