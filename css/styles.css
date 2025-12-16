@@ -20,12 +20,12 @@
   --border-rgb: 38 39 46; /* #26272e */
 
   /* header translucency */
-  --header-alpha: .01;   /* 0 = fully transparent, 1 = opaque */
-  --header-blur: 3px;   /* blur amount */
+  --header-alpha: .1;  /* 0 = fully transparent, 1 = opaque */
+  --header-blur: 3px;  /* blur amount */
 
-  /* Burger menu */
-   --menu-alpha: .60;   /* translucency of the dropdown (0..1) */
-  --menu-blur:  5px;  /* how foggy the blur is */
+  /* Burger menu (dropdown) */
+  --menu-alpha: .60;  /* translucency of dropdown (0..1) */
+  --menu-blur:  5px; /* how foggy the blur is */
 }
 
 * { box-sizing: border-box; }
@@ -42,17 +42,24 @@ header {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px;
+
+  /* translucent “frosted” background */
   background: rgb(19 19 24 / var(--header-alpha));
-  border-bottom: 1px solid rgb(38 39 46 / .7);
+  border-bottom: 1px solid rgb(38 39 46 / .45);
   backdrop-filter: blur(var(--header-blur)) saturate(1.05);
   -webkit-backdrop-filter: blur(var(--header-blur)) saturate(1.05);
 }
 header:hover { background: rgb(19 19 24 / calc(var(--header-alpha) + .08)); }
 
 header .brand { font-weight: 700; letter-spacing: .2px; }
+
 nav a {
-  color: var(--muted); text-decoration: none; margin-left: 16px; padding: 6px 10px;
-  border-radius: 10px; border: 1px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 16px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
 }
 nav a.active, nav a:hover { color: var(--text); border-color: var(--border); background: var(--bg-elev); }
 
@@ -65,6 +72,7 @@ main#app { max-width: 1180px; margin: 0 auto; padding: 16px; }
 }
 .toolbar .chipbar { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* ===== Inputs & Chips ===== */
 .chip {
   padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border);
   background: var(--bg-elev); color: var(--text); cursor: pointer;
@@ -148,7 +156,7 @@ select {
   overflow: hidden;                /* scrolling happens in .select-list */
   backdrop-filter: blur(6px);
 }
-/* CRITICAL: honor the [hidden] attribute */
+/* Honor the [hidden] attribute */
 .select-menu[hidden] { display: none !important; }
 
 .select-list {
@@ -235,7 +243,7 @@ main#app{ position: relative; z-index: 1; }
 .menu-toggle{
   display: inline-flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
   width: 40px; height: 36px;
-  border: 0;                       /* no white border */
+  border: 0;                       /* no border */
   border-radius: 10px;
   background: rgb(19 19 24 / .6);  /* subtle glass pill */
   cursor: pointer; color: var(--text);
@@ -243,29 +251,46 @@ main#app{ position: relative; z-index: 1; }
 .menu-toggle .bar{ width: 20px; height: 2px; background: var(--text); border-radius: 2px; display: block; }
 .menu-toggle:focus, .menu-toggle:focus-visible{ outline: none; box-shadow: none; }
 
-/* Dropdown panel (0.8 translucent) */
+/* Foggy dropdown that blurs the map behind it */
 .menu-panel{
-  position: absolute; right: 16px; top: calc(100% + 8px);
-  min-width: 180px; padding: 6px;
-  border: 1px solid var(--border); border-radius: 12px;
-  background: rgba(19,19,24,0.80);
-  backdrop-filter: blur(8px) saturate(1.02);
+  position: fixed;                   /* <— was absolute */
+  right: 16px;                       /* JS will update these on open */
+  top: 56px;
+
+  min-width: 180px;
+  padding: 6px;
+  border: 1px solid rgb(255 255 255 / .06);
+  border-radius: 12px;
   box-shadow: 0 10px 24px rgba(0,0,0,.35);
-  transform: translateY(-4px); opacity: 0;
+
+  background: rgb(19 19 24 / var(--menu-alpha, .6));
+  backdrop-filter: blur(var(--menu-blur, 12px)) saturate(1.02);
+  -webkit-backdrop-filter: blur(var(--menu-blur, 12px)) saturate(1.02);
+  background-clip: padding-box;
+
+  transform: translateY(-4px);
+  opacity: 0;
   transition: transform .12s ease, opacity .12s ease;
-  z-index: 20;
+  z-index: 1000;                     /* ensure over map controls */
 }
 .menu-panel.in{ transform: translateY(0); opacity: 1; }
+
+
 .menu-panel .item{ display:block; padding:10px 12px; border-radius: 8px; color: var(--text); text-decoration: none; }
 .menu-panel .item:hover{ background: #1a1b22; }
 .menu-panel .item.active{ color: var(--accent); }
 
-/* ===== FINAL GUARDED OVERRIDE =====
-   Ensures translucent header wins even if map.css styles `header` later. */
+/* ===== FINAL GUARDED OVERRIDES =====
+   Ensure translucent header & menu win even if map.css loads later. */
 body header#app-header{
-  background: rgb(19 19 24 / var(--header-alpha));
-  border-bottom: 1px solid rgb(38 39 46 / 0.45);
-  backdrop-filter: blur(var(--header-blur)) saturate(1.05);
-  -webkit-backdrop-filter: blur(var(--header-blur)) saturate(1.05);
-  z-index: 50;
+  background: rgb(19 19 24 / var(--header-alpha)) !important;
+  border-bottom: 1px solid rgb(38 39 46 / .45) !important;
+  backdrop-filter: blur(var(--header-blur)) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(var(--header-blur)) saturate(1.05) !important;
+  z-index: 50 !important;
+}
+body .menu-panel{
+  background: rgb(19 19 24 / var(--menu-alpha)) !important;
+  backdrop-filter: blur(var(--menu-blur)) saturate(1.02) !important;
+  -webkit-backdrop-filter: blur(var(--menu-blur)) saturate(1.02) !important;
 }

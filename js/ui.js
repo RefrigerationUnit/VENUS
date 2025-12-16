@@ -7,52 +7,60 @@ export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
   el.innerHTML = `
     <div class="brand">${APP.name}</div>
-
-    <button id="menu-toggle"
-            class="menu-toggle"
-            aria-haspopup="true"
-            aria-expanded="false"
-            aria-label="Open menu">
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
+    <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </button>
-
-    <div id="menu-panel" class="menu-panel" hidden>
-      <a href="./index.html"     class="item ${active==='home'?'active':''}">Home</a>
-      <a href="./contacts.html"  class="item ${active==='contacts'?'active':''}">Contacts</a>
-      <a href="./profile.html"   class="item ${active==='profile'?'active':''}">Profile</a>
-    </div>
   `;
 
-  const toggle = el.querySelector('#menu-toggle');
-  const panel  = el.querySelector('#menu-panel');
-
-  function openMenu() {
-    panel.hidden = false;
-    toggle.setAttribute('aria-expanded', 'true');
-    requestAnimationFrame(() => panel.classList.add('in'));
-    document.addEventListener('click', onDocClick);
-    document.addEventListener('keydown', onKey);
+  // Create the floating panel once (as a body child)
+  let panel = document.getElementById('menu-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'menu-panel';
+    panel.className = 'menu-panel';
+    panel.innerHTML = `
+      <a class="item ${active==='home'?'active':''}" href="./index.html">Home</a>
+      <a class="item ${active==='contacts'?'active':''}" href="./contacts.html">Contacts</a>
+      <a class="item ${active==='profile'?'active':''}" href="./profile.html">Profile</a>
+    `;
+    document.body.appendChild(panel);
   }
-  function closeMenu() {
+
+  const toggle = document.getElementById('menu-toggle');
+
+  function positionPanel() {
+    const r = toggle.getBoundingClientRect();
+    panel.style.right = `${Math.max(16, window.innerWidth - r.right)}px`;
+    panel.style.top   = `${r.bottom + 8 + window.scrollY}px`;
+  }
+
+  function open() {
+    positionPanel();
+    panel.classList.add('in');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClick, { passive: true });
+    window.addEventListener('resize', onReflow, { passive: true });
+    window.addEventListener('scroll', onReflow, { passive: true });
+  }
+  function close() {
     panel.classList.remove('in');
     toggle.setAttribute('aria-expanded', 'false');
-    // end the transition cleanly
-    setTimeout(() => { panel.hidden = true; }, 120);
     document.removeEventListener('click', onDocClick);
-    document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onReflow);
+    window.removeEventListener('scroll', onReflow);
   }
   function onDocClick(e) {
-    if (!panel.contains(e.target) && !toggle.contains(e.target)) closeMenu();
+    if (e.target === toggle || toggle.contains(e.target)) return;
+    if (!panel.contains(e.target)) close();
   }
-  function onKey(e) {
-    if (e.key === 'Escape') closeMenu();
-  }
+  function onReflow(){ if (panel.classList.contains('in')) positionPanel(); }
 
-  toggle.onclick = () => (panel.hidden ? openMenu() : closeMenu());
-  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  toggle.onclick = (e) => {
+    e.stopPropagation();
+    panel.classList.contains('in') ? close() : open();
+  };
 }
+
 
 
 /* ---------- Filters bar ---------- */
