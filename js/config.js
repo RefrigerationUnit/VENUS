@@ -1,5 +1,5 @@
 export const APP = {
-  name: 'Colossus Maps',
+  name: 'VENUS PROJECT',
 
   states: [
     'AL','AZ','AR','CA','CO','CT','DE','FL','GA','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI',
