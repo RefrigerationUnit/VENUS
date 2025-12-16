@@ -51,6 +51,12 @@
   /* Specular highlight position (JS updates these) */
   --mx: 50%;
   --my: 40%;
+
+  /* Title About window */
+  --modal-backdrop-alpha: .45;   /* darkness behind dialog */
+  --modal-backdrop-blur: 12px;   /* how foggy the backdrop is */
+  --modal-panel-alpha: .80;      /* dialog translucency */
+  --modal-panel-blur: 10px;      /* how foggy the dialog is */
 }
 
 * { box-sizing: border-box; }
@@ -473,3 +479,66 @@ body .menu-panel{
   }
 }
 
+/* Title About window */
+/* Backdrop that blurs the page */
+.about-backdrop{
+  position: fixed;
+  inset: 0;
+  display: none;                 /* shown via .open */
+  align-items: center;
+  justify-content: center;
+  background: rgb(10 10 12 / var(--modal-backdrop-alpha));
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  z-index: 2000;
+}
+.about-backdrop.open{ display: flex; }
+
+/* The dialog panel */
+.about-dialog{
+  width: min(560px, 92vw);
+  padding: 16px 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgb(255 255 255 / .08);
+  background: rgb(19 19 24 / var(--modal-panel-alpha));
+  backdrop-filter: blur(var(--modal-panel-blur)) saturate(1.03);
+  -webkit-backdrop-filter: blur(var(--modal-panel-blur)) saturate(1.03);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  color: var(--text);
+}
+
+/* Header row inside the dialog */
+.about-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.about-head h2{
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .2px;
+}
+
+/* Close button */
+.about-close{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / .12);
+  background: rgb(255 255 255 / .06);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.about-close:hover{ background: rgb(255 255 255 / .12); }
+
+.about-body{ line-height: 1.6; opacity: .95; }
+
+/* (Optional) make the title look clearly clickable */
+#app-header .about-trigger{
+  cursor: pointer;
+  user-select: none;
+}
