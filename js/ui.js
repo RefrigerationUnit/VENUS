@@ -10,7 +10,7 @@ export function buildHeader(active = 'home') {
 
   el.innerHTML = `
     <div class="brand">
-      <div id="orb-sphere" class="orb-container in-brand" style="pointer-events:none" aria-hidden="true"></div>
+      <a id="orb-sphere" class="orb-container in-brand" href="./index.html" title="Go to Home" aria-label="Home"></a>
       <span class="logo-bubble">${APP.name}</span>
     </div>
 

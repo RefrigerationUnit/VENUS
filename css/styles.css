@@ -91,6 +91,9 @@ header .brand {
 }
 header .brand .orb-container.in-brand {
   flex-shrink: 0;
+  display: block;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 nav a {
