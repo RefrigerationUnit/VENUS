@@ -2,41 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>My Bookmarks — Colossus Maps</title>
+  <title>Colossus Maps — User Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/assets/favicon.ico" />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="./assets/favicon.ico" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/map.css" />
+  <style>
+    /* Center the panel; reuse existing glassy card styles */
+    main#app {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: calc(100vh - 70px);
+      display: grid;
+      place-items: start center;
+      gap: 18px;
+    }
+    .auth-card {
+      width: min(680px, 100%);
+    }
+    .auth-card h2 {
+      margin: 8px 0 14px;
+    }
+    .auth-form {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .auth-form label {
+      font-size: 12px; color: var(--muted);
+    }
+    .auth-form input[type="text"],
+    .auth-form input[type="password"]{
+      background: var(--bg-elev);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      outline: none;
+      width: 100%;
+    }
+    .auth-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .hello { font-size: 22px; font-weight: 700; margin: 0 0 8px; }
+    .subtle-row { color: var(--muted); margin-bottom: 8px; }
+  </style>
 </head>
 <body>
+  <!-- Background network -->
+  <canvas id="bg-net" aria-hidden="true"></canvas>
+  <script>
+    window.NETWORK_OPTS = {
+      color: 'rgba(225,230,240,1)',
+      glowColor: 'rgba(225,230,240,0.55)'
+    };
+  </script>
+  <script defer src="./js/network.js"></script>
+
+  <!-- Header (ui.js will render orb + title + burger) -->
   <header id="app-header"></header>
 
-  <main class="page">
-    <h1>My Bookmarks</h1>
-    <p class="subtle">Saved sites on this device (localStorage).</p>
-    <section id="profile-cards" class="cards"></section>
+  <main id="app">
+    <!-- Where profile.js will render either auth form or bookmarks -->
+    <section class="card auth-card" id="profile-root">
+      <!-- JS fills this -->
+    </section>
+
+    <!-- Bookmarked cards appear below when logged in -->
+    <section class="cards" id="profile-bookmarks"></section>
   </main>
 
-  <script type="module" src="/js/storage.js"></script>
-  <script type="module" src="/js/ui.js"></script>
-  <script type="module" src="/js/dataLoader.js"></script>
-  <script type="module">
-    import { buildHeader, renderCards } from '/js/ui.js';
-    import { getBookmarks } from '/js/storage.js';
-    import { loadSites } from '/js/dataLoader.js';
+  <!-- Three.js + orb -->
+  <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
+  <script type="module" src="./js/orb.js"></script>
 
-    buildHeader('profile');
-
-    const all = await loadSites();
-    const savedIds = new Set(getBookmarks());
-    const savedSites = all.filter(s => savedIds.has(s.id));
-
-    const onBookmarkToggle = (siteId, isNowSaved) => {
-      const container = document.getElementById('profile-cards');
-      const updated = savedSites.filter(s => isNowSaved ? true : s.id !== siteId);
-      renderCards(updated, container, onBookmarkToggle);
-    };
-
-    renderCards(savedSites, document.getElementById('profile-cards'), onBookmarkToggle);
-  </script>
+  <!-- App modules -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/storage.js"></script>
+  <script type="module" src="./js/auth.js"></script>
+  <script type="module" src="./js/ui.js"></script>
+  <script type="module" src="./js/dataLoader.js"></script>
+  <script type="module" src="./js/profile.js"></script>
 </body>
 </html>
+
