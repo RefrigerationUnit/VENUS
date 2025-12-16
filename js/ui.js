@@ -166,12 +166,16 @@ export function renderFilters({ state }, onChange) {
 /* ---------- Cards ---------- */
 export function renderCards(sites, container = document.getElementById('cards'), onBookmarkToggle) {
   container.innerHTML = '';
+  ensureLoginModal(); // create the login modal if it doesn't exist
+
+  const user = currentUser(); // null if not logged in
 
   sites.forEach(site => {
     const card = document.createElement('article');
     card.className = 'card';
     card.id = `card-${site.id}`;
-    const saved = isBookmarked(site.id);
+    // Only show as bookmarked if user is logged in
+    const saved = user ? isBookmarked(site.id) : false;
 
     card.innerHTML = `
       <h3>
@@ -197,6 +201,11 @@ export function renderCards(sites, container = document.getElementById('cards'),
     const bm = card.querySelector('[data-bookmark]');
     if (bm) {
       bm.onclick = () => {
+        // Check if user is logged in
+        if (!currentUser()) {
+          showLoginModal();
+          return;
+        }
         const nowSaved = toggleBookmark(site.id);
         if (onBookmarkToggle) onBookmarkToggle(site.id, nowSaved);
         renderBookmarkButton(card, nowSaved);
@@ -213,6 +222,62 @@ function renderBookmarkButton(card, saved){
   btn.classList.toggle('is-on', saved);
   btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
   btn.textContent = saved ? 'Remove Bookmark' : 'Bookmark';
+}
+
+/* ---------- Login Required Modal ---------- */
+let loginModal = null;
+
+function ensureLoginModal() {
+  if (loginModal) return;
+  
+  const backdrop = document.createElement('div');
+  backdrop.className = 'about-backdrop login-modal';
+  backdrop.setAttribute('aria-hidden', 'true');
+  backdrop.innerHTML = `
+    <div class="about-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <div class="about-head">
+        <h2 id="login-title">Login Required</h2>
+        <button class="about-close" aria-label="Close">×</button>
+      </div>
+      <div class="about-body">
+        <p style="margin:0 0 16px;">Please login to register your bookmarks.</p>
+        <a href="./profile.html" class="btn primary" style="display:inline-block;">Go to Login</a>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+
+  const closeBtn = backdrop.querySelector('.about-close');
+  const dialog = backdrop.querySelector('.about-dialog');
+
+  function close() {
+    backdrop.classList.remove('open');
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.removeEventListener('keydown', onKey);
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') close();
+  }
+
+  closeBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+  dialog.addEventListener('click', (e) => e.stopPropagation());
+
+  loginModal = backdrop;
+}
+
+function showLoginModal() {
+  ensureLoginModal();
+  loginModal.classList.add('open');
+  loginModal.setAttribute('aria-hidden', 'false');
+  loginModal.querySelector('.about-close').focus();
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      loginModal.classList.remove('open');
+      loginModal.setAttribute('aria-hidden', 'true');
+    }
+  });
 }
 
 /* ---------- Results meta ---------- */

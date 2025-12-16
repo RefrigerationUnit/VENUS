@@ -554,6 +554,9 @@ body .menu-panel{
 
 .about-body{ line-height: 1.6; opacity: .95; }
 
+/* Ensure modal action links (e.g., "Go to Login") are not underlined */
+.about-backdrop .btn { text-decoration: none; }
+
 /* (Optional) make the title look clearly clickable */
 #app-header .about-trigger{
   cursor: pointer;
