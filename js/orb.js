@@ -19,8 +19,8 @@ const PARAMS = {
   JITTER_SPEED: 0.9,          // multiplier
 
   // Colors (vec3). These are multiplied by dot alpha in shader.
-  COLOR: new THREE.Color(0.78, 0.86, 1.00),  // soft blue-white
-  GLOW:  new THREE.Color(0.25, 0.55, 1.00),  // contributes to falloff tint
+  COLOR: new THREE.Color(0x828282),  // soft blue-white
+  GLOW:  new THREE.Color(0x828282),  // contributes to falloff tint
 
   // When fullscreen we can make dots a little larger for drama:
   DOT_SIZE_FULLSCREEN: 13.5
