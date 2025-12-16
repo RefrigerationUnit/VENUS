@@ -3,7 +3,7 @@ import { APP } from './config.js';
 import { buildHeader, renderCards } from './ui.js';
 import { getBookmarkedIds } from './storage.js';
 import { signIn, signUp, signOut, currentUser } from './auth.js';
-import { loadSites } from './dataLoader.js'; // assumes this exists in your app
+import { loadSites } from './dataloader.js'; // assumes this exists in your app
 
 const root = document.getElementById('profile-root');
 const cardsEl = document.getElementById('profile-bookmarks');
