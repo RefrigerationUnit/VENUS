@@ -2,29 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Contacts — Colossus Maps</title>
+  <title>Contacts — Venus Project</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/assets/favicon.ico" />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="./assets/favicon.ico" />
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
+  <!-- Optional animated network background (matches your index page) -->
+  <canvas id="bg-net" aria-hidden="true"></canvas>
+  <script>
+    window.NETWORK_OPTS = {
+      color: 'rgba(225,230,240,1)',
+      glowColor: 'rgba(225,230,240,0.55)'
+    };
+  </script>
+  <script defer src="./js/network.js"></script>
+
   <header id="app-header"></header>
 
   <main class="page">
-    <h1>Contact</h1>
-    <p>Say hi! I’m Julio. Reach me here:</p>
-    <ul class="links">
-      <li><a href="mailto:your.email@example.com">your.email@example.com</a></li>
-      <li><a href="https://www.linkedin.com/in/your-handle" target="_blank" rel="noreferrer">LinkedIn</a></li>
-      <li><a href="https://github.com/your-handle" target="_blank" rel="noreferrer">GitHub</a></li>
-      <li><a href="https://your-website.example" target="_blank" rel="noreferrer">Website</a></li>
-    </ul>
+    <article class="card contact-card">
+      <img
+        src="./assets/images/lipp.jpeg"
+        alt="Portrait of Julio Viejo"
+        class="contact-photo"
+        loading="lazy"
+      />
+
+      <h1 class="contact-title">Get in touch</h1>
+
+      <p class="contact-blurb">
+        Julio is a student at Columbia University, currently enrolled in the
+        M.S. in Advanced Architectural Design program.
+      </p>
+
+      <ul class="contact-links">
+        <!-- TODO: replace with your real info -->
+        <li>
+          <a href="https://www.linkedin.com/in/YOUR-HANDLE" target="_blank" rel="noopener noreferrer">
+            LinkedIn
+          </a>
+        </li>
+        <li>
+          <a href="mailto:julio.viejo@columbia.edu">julio.viejo@columbia.edu</a>
+        </li>
+        <li>
+          <a href="tel:+1-646-302-7303">+1 (646) 302-7303</a>
+          <p>New York City, NY</p>
+        </li>
+      </ul>
+    </article>
   </main>
 
-  <script type="module" src="/js/ui.js"></script>
+  <!-- Three.js + orb (load these BEFORE we build the header so the DOMContentLoaded hook can run) -->
+  <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
+  <script type="module" src="./js/orb.js"></script>
+
+  <!-- Build header (Contacts active) and then inject the orb container into the header -->
   <script type="module">
-    import { buildHeader } from '/js/ui.js';
+    import { buildHeader } from './js/ui.js';
+
+    // Build the standard header/nav
     buildHeader('contacts');
+
+    // Create the orb container and place it in the header.
+    // If you want it before the brand title, insert before .brand; otherwise prepend.
+    const header = document.getElementById('app-header');
+    const orb = document.createElement('div');
+    orb.id = 'orb-sphere';
+    orb.className = 'orb-container';
+
+    const brand = header.querySelector('.brand');
+    if (brand) {
+      header.insertBefore(orb, brand);   // orb appears to the left of the title
+    } else {
+      header.prepend(orb);
+    }
   </script>
 </body>
 </html>
+

@@ -7,8 +7,8 @@ export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
   el.innerHTML = `
     <div class="brand">
-      <div id="orb-sphere" class="orb-container in-brand" role="button" tabindex="0"
-           aria-label="Open animated sphere" style="pointer-events: none;"></div>
+      <div id="orb-sphere" class="orb-container in-brand" role="img" aria-hidden="true"
+           style="pointer-events:none;"></div>
       <span class="logo-bubble">${APP.name}</span>
     </div>
     <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
@@ -16,23 +16,23 @@ export function buildHeader(active = 'home') {
     </button>
   `;
 
+  // glossy "bubble" sheen follow
   const bubble = el.querySelector('.logo-bubble');
-const headerRect = () => el.getBoundingClientRect();
-function moveSheen(e) {
-  const r = headerRect();
-  const x = ((e.clientX - r.left) / Math.max(1, r.width)) * 100;
-  const y = ((e.clientY - r.top) / Math.max(1, r.height)) * 100;
-  bubble.style.setProperty('--mx', x + '%');
-  bubble.style.setProperty('--my', y + '%');
-}
-el.addEventListener('pointermove', moveSheen, { passive: true });
-el.addEventListener('pointerleave', () => {
-  bubble.style.setProperty('--mx', '50%');
-  bubble.style.setProperty('--my', '40%');
-}, { passive: true });
+  const headerRect = () => el.getBoundingClientRect();
+  function moveSheen(e) {
+    const r = headerRect();
+    const x = ((e.clientX - r.left) / Math.max(1, r.width)) * 100;
+    const y = ((e.clientY - r.top) / Math.max(1, r.height)) * 100;
+    bubble.style.setProperty('--mx', x + '%');
+    bubble.style.setProperty('--my', y + '%');
+  }
+  el.addEventListener('pointermove', moveSheen, { passive: true });
+  el.addEventListener('pointerleave', () => {
+    bubble.style.setProperty('--mx', '50%');
+    bubble.style.setProperty('--my', '40%');
+  }, { passive: true });
 
-
-  // Create the floating panel once (as a body child)
+  // Floating menu panel (one instance, attached to body)
   let panel = document.getElementById('menu-panel');
   if (!panel) {
     panel = document.createElement('div');
@@ -58,7 +58,7 @@ el.addEventListener('pointerleave', () => {
     positionPanel();
     panel.classList.add('in');
     toggle.setAttribute('aria-expanded', 'true');
-    document.addEventListener('click', onDocClick, { passive: true });
+    document.addEventListener('click', onDocClick);
     window.addEventListener('resize', onReflow, { passive: true });
     window.addEventListener('scroll', onReflow, { passive: true });
   }
@@ -81,8 +81,6 @@ el.addEventListener('pointerleave', () => {
   };
 }
 
-
-
 /* ---------- Filters bar ---------- */
 export function renderFilters({ state }, onChange) {
   const el = document.getElementById('filters');
@@ -103,7 +101,7 @@ export function renderFilters({ state }, onChange) {
     options: APP.states,
     onApply: (nextSet) => {
       state.filters.states = nextSet;
-      onChange();
+      onChange(); // updates list + map
     }
   });
 
@@ -115,7 +113,7 @@ export function renderFilters({ state }, onChange) {
     b.textContent = label(t);
     b.dataset.value = t;
     b.dataset.kind = 'type';
-    b.dataset.type = t; // allows CSS dot color
+    b.dataset.type = t;
     b.onclick = () => { toggleChip(state.filters.types, t); onChange(); };
     tc.appendChild(b);
   });
@@ -133,6 +131,7 @@ export function renderFilters({ state }, onChange) {
 /* ---------- Cards ---------- */
 export function renderCards(sites, container = document.getElementById('cards'), onBookmarkToggle) {
   container.innerHTML = '';
+
   sites.forEach(site => {
     const card = document.createElement('article');
     card.className = 'card';
@@ -153,21 +152,36 @@ export function renderCards(sites, container = document.getElementById('cards'),
       </div>
       <div class="actions">
         <a class="btn ghost" href="${site.source_url || '#'}" target="_blank" rel="noreferrer">Source</a>
-        <button class="btn bookmark" data-bookmark>${saved ? 'Remove Bookmark' : 'Bookmark'}</button>
+        <button class="btn bookmark ${saved ? 'is-on' : ''}" data-bookmark
+                aria-pressed="${saved ? 'true' : 'false'}">
+          ${saved ? 'Remove Bookmark' : 'Bookmark'}
+        </button>
       </div>
     `;
 
     const bm = card.querySelector('[data-bookmark]');
-    bm.onclick = () => {
-      const nowSaved = toggleBookmark(site.id);
-      if (onBookmarkToggle) onBookmarkToggle(site.id, nowSaved); // pass site.id (not card id)
-      renderBookmarkButton(card, nowSaved);
-    };
+    if (bm) {
+      bm.onclick = () => {
+        const nowSaved = toggleBookmark(site.id);
+        if (onBookmarkToggle) onBookmarkToggle(site.id, nowSaved);
+        renderBookmarkButton(card, nowSaved);
+      };
+    }
 
     container.appendChild(card);
   });
 }
 
+function renderBookmarkButton(card, saved){
+  const btn = card.querySelector('[data-bookmark]');
+  if (!btn) return;
+  // keep base classes; toggle the on-state + a11y
+  btn.classList.toggle('is-on', saved);
+  btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
+  btn.textContent = saved ? 'Remove Bookmark' : 'Bookmark';
+}
+
+/* ---------- Results meta ---------- */
 export function setResultsCount(n) {
   document.getElementById('results-count').textContent = `${n} result${n===1?'':'s'}`;
 }
@@ -206,7 +220,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   // Popover menu
   const menu = document.createElement('div');
   menu.className = 'select-menu';
-  menu.hidden = true; // CSS respects [hidden]
+  menu.hidden = true;
 
   const list = document.createElement('ul');
   list.className = 'select-list';
@@ -255,7 +269,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   actions.append(ok, cancel);
   menu.append(list, actions);
 
-  // Mount the button + menu
+  // Mount button + menu
   mount.append(btn, menu);
 
   // Bulk actions below (outside menu): Clear all / Select all
@@ -267,28 +281,27 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   `;
   mount.appendChild(bulk);
 
-// CLEAR ALL — mutate in place, re-render ticks, then refresh app
-bulk.querySelector('[data-bulk="clear"]').onclick = (e) => {
-  e.preventDefault();
-  selected.clear();      // mutate original Set
-  temp.clear();          // keep open menu ticks in sync
-  countSpan.textContent = `(0 selected)`;
-  renderList();          // redraw ✓ instantly
-  onApply(selected);     // triggers onChange -> filters + map update
-};
+  // CLEAR ALL — mutate in place, re-render ticks, then refresh app
+  bulk.querySelector('[data-bulk="clear"]').onclick = (e) => {
+    e.preventDefault();
+    selected.clear();         // mutate original Set
+    temp.clear();             // keep open menu ticks in sync
+    countSpan.textContent = `(0 selected)`;
+    renderList();             // redraw ✓ instantly
+    onApply(selected);        // triggers onChange -> filters + map update
+  };
 
-// SELECT ALL — mutate in place, re-render ticks, then refresh app
-bulk.querySelector('[data-bulk="select"]').onclick = (e) => {
-  e.preventDefault();
-  selected.clear();
-  options.forEach(v => selected.add(v));  // fill original Set
-  temp.clear();
-  options.forEach(v => temp.add(v));
-  countSpan.textContent = `(${selected.size} selected)`;
-  renderList();
-  onApply(selected);     // triggers onChange -> filters + map update
-};
-
+  // SELECT ALL — mutate in place, re-render ticks, then refresh app
+  bulk.querySelector('[data-bulk="select"]').onclick = (e) => {
+    e.preventDefault();
+    selected.clear();
+    options.forEach(v => selected.add(v)); // fill original Set
+    temp.clear();
+    options.forEach(v => temp.add(v));
+    countSpan.textContent = `(${selected.size} selected)`;
+    renderList();
+    onApply(selected);        // triggers onChange -> filters + map update
+  };
 
   // Open/close behavior
   function openMenu() {
@@ -306,7 +319,6 @@ bulk.querySelector('[data-bulk="select"]').onclick = (e) => {
     document.removeEventListener('keydown', onKey);
   }
   function onDocClick(e) {
-    // Close on outside click
     if (!menu.hidden && !mount.contains(e.target)) {
       closeMenu();
     }
@@ -337,29 +349,20 @@ function toggleChip(set, value) {
   });
 }
 
-function label(t) {
-  return (
-    {
-      industrial_building: 'Industrial Building',
-      industrial_shell: 'Industrial Shell',
-      industrial_land: 'Industrial Land'
-    }[t] || t
-  );
+function label(t){
+  return ({
+    industrial_building: 'Industrial Building',
+    industrial_shell: 'Industrial Shell',
+    industrial_land: 'Industrial Land'
+  })[t] || t;
 }
 
-function fmtSize(s) {
+function fmtSize(s){
   return s.size_sqft
     ? `${Number(s.size_sqft).toLocaleString()} sq ft`
     : (s.acreage ? `${s.acreage} acres` : 'Size n/a');
 }
 
-function flag(v, text) {
+function flag(v, text){
   return v ? `<span class="tag">${text}</span>` : '';
-}
-
-function renderBookmarkButton(card, saved){
-  const btn = card.querySelector('[data-bookmark]');
-  if (!btn) return;
-  btn.className = 'btn bookmark';
-  btn.textContent = saved ? 'Remove Bookmark' : 'Bookmark';
 }
