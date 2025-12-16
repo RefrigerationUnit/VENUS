@@ -58,26 +58,10 @@
   <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
   <script type="module" src="./js/orb.js"></script>
 
-  <!-- Build header (Contacts active) and then inject the orb container into the header -->
+  <!-- Build header (Contacts active) -->
   <script type="module">
     import { buildHeader } from './js/ui.js';
-
-    // Build the standard header/nav
     buildHeader('contacts');
-
-    // Create the orb container and place it in the header.
-    // If you want it before the brand title, insert before .brand; otherwise prepend.
-    const header = document.getElementById('app-header');
-    const orb = document.createElement('div');
-    orb.id = 'orb-sphere';
-    orb.className = 'orb-container';
-
-    const brand = header.querySelector('.brand');
-    if (brand) {
-      header.insertBefore(orb, brand);   // orb appears to the left of the title
-    } else {
-      header.prepend(orb);
-    }
   </script>
 </body>
 </html>

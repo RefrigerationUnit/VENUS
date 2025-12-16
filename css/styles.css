@@ -643,3 +643,21 @@ main#app{ flex: 1 0 auto; }   /* content grows */
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* LOGIN button top right */
+/* right side cluster in header */
+.hdr-right { display:flex; align-items:center; gap:10px; }
+
+/* auth badge */
+.hdr-auth{
+  text-decoration:none;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgb(255 255 255 / .06);
+  background: rgb(19 19 24 / .45);
+  backdrop-filter: blur(6px) saturate(1.02);
+  -webkit-backdrop-filter: blur(6px) saturate(1.02);
+}
+.hdr-auth:hover{ color: var(--text); background: rgb(19 19 24 / .6); }

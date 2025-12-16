@@ -220,13 +220,17 @@ class Orb {
   }
 }
 
-// ====== bootstrap when the header exists ======
-document.addEventListener('DOMContentLoaded', () => {
+// ====== Exported init function for pages that build header dynamically ======
+export function initOrb() {
   const container = document.getElementById('orb-sphere');
-  if (!container) return;
-  // Ensure the header stays on top of your map etc.
+  if (!container || container.dataset.orbInit) return; // already initialized
+  container.dataset.orbInit = 'true';
   container.style.zIndex = getComputedStyle(document.documentElement)
     .getPropertyValue('--orb-z') || 200;
-
   new Orb(container);
+}
+
+// ====== bootstrap when the header exists ======
+document.addEventListener('DOMContentLoaded', () => {
+  initOrb();
 });

@@ -1,22 +1,28 @@
 // /js/ui.js
 import { APP } from './config.js';
 import { isBookmarked, toggleBookmark } from './storage.js';
+import { currentUser } from './auth.js'; // used for the header auth badge
 
-/* ---------- Header ---------- */
+/* ---------- Header (brand + auth badge + burger) ---------- */
 export function buildHeader(active = 'home') {
   const el = document.getElementById('app-header');
+  if (!el) return;
+
   el.innerHTML = `
     <div class="brand">
-      <div id="orb-sphere" class="orb-container in-brand" role="img" aria-hidden="true"
-           style="pointer-events:none;"></div>
+      <div id="orb-sphere" class="orb-container in-brand" style="pointer-events:none" aria-hidden="true"></div>
       <span class="logo-bubble">${APP.name}</span>
     </div>
-    <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
-      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-    </button>
+
+    <div class="hdr-right">
+      <a id="auth-status" class="hdr-auth" href="./profile.html" title="Open profile"></a>
+      <button class="menu-toggle" id="menu-toggle" aria-haspopup="true" aria-expanded="false">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+    </div>
   `;
 
-  // glossy "bubble" sheen follow
+  // glossy title sheen follows pointer
   const bubble = el.querySelector('.logo-bubble');
   const headerRect = () => el.getBoundingClientRect();
   function moveSheen(e) {
@@ -32,7 +38,10 @@ export function buildHeader(active = 'home') {
     bubble.style.setProperty('--my', '40%');
   }, { passive: true });
 
-  // Floating menu panel (one instance, attached to body)
+  // Auth badge text
+  refreshAuthBadge();
+
+  // Build (or reuse) the floating menu panel
   let panel = document.getElementById('menu-panel');
   if (!panel) {
     panel = document.createElement('div');
@@ -50,6 +59,7 @@ export function buildHeader(active = 'home') {
 
   function positionPanel() {
     const r = toggle.getBoundingClientRect();
+    // If your .menu-panel is position:fixed, drop the +window.scrollY
     panel.style.right = `${Math.max(16, window.innerWidth - r.right)}px`;
     panel.style.top   = `${r.bottom + 8 + window.scrollY}px`;
   }
@@ -58,7 +68,7 @@ export function buildHeader(active = 'home') {
     positionPanel();
     panel.classList.add('in');
     toggle.setAttribute('aria-expanded', 'true');
-    document.addEventListener('click', onDocClick);
+    document.addEventListener('click', onDocClick, { passive: true });
     window.addEventListener('resize', onReflow, { passive: true });
     window.addEventListener('scroll', onReflow, { passive: true });
   }
@@ -81,9 +91,34 @@ export function buildHeader(active = 'home') {
   };
 }
 
+/* Public helper so other pages can refresh the badge after auth changes */
+export function refreshAuthBadge() {
+  const a = document.getElementById('auth-status');
+  if (!a) return;
+  let user = null;
+  try { user = currentUser(); } catch {}
+  if (user) {
+    a.textContent = `Logged in as ${user}`;
+    a.title = `Logged in as ${user}`;
+  } else {
+    a.textContent = 'Login';
+    a.title = 'Login';
+  }
+  a.href = './profile.html';
+}
+
+// Update the badge if auth changes (same tab or other tab)
+window.addEventListener('auth:changed', refreshAuthBadge);
+window.addEventListener('storage', (e) => {
+  if (e.key === 'auth.user') refreshAuthBadge();
+});
+
+
 /* ---------- Filters bar ---------- */
 export function renderFilters({ state }, onChange) {
   const el = document.getElementById('filters');
+  if (!el) return;
+
   el.innerHTML = `
     <div class="multiselect" id="state-select"></div>
     <div class="chipbar" id="type-chips"></div>
@@ -101,7 +136,7 @@ export function renderFilters({ state }, onChange) {
     options: APP.states,
     onApply: (nextSet) => {
       state.filters.states = nextSet;
-      onChange(); // updates list + map
+      onChange();
     }
   });
 
@@ -113,7 +148,7 @@ export function renderFilters({ state }, onChange) {
     b.textContent = label(t);
     b.dataset.value = t;
     b.dataset.kind = 'type';
-    b.dataset.type = t;
+    b.dataset.type = t; // allows CSS dot color
     b.onclick = () => { toggleChip(state.filters.types, t); onChange(); };
     tc.appendChild(b);
   });
@@ -175,7 +210,6 @@ export function renderCards(sites, container = document.getElementById('cards'),
 function renderBookmarkButton(card, saved){
   const btn = card.querySelector('[data-bookmark]');
   if (!btn) return;
-  // keep base classes; toggle the on-state + a11y
   btn.classList.toggle('is-on', saved);
   btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
   btn.textContent = saved ? 'Remove Bookmark' : 'Bookmark';
@@ -183,9 +217,9 @@ function renderBookmarkButton(card, saved){
 
 /* ---------- Results meta ---------- */
 export function setResultsCount(n) {
-  document.getElementById('results-count').textContent = `${n} result${n===1?'':'s'}`;
+  const el = document.getElementById('results-count');
+  if (el) el.textContent = `${n} result${n===1?'':'s'}`;
 }
-
 export function highlightCard(siteId) {
   const el = document.getElementById(`card-${siteId}`);
   if (!el) return;
@@ -225,7 +259,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   const list = document.createElement('ul');
   list.className = 'select-list';
 
-  // Temp selection that only commits on OK
+  // Temp copy; only commit on OK
   const temp = new Set(Array.from(selected));
 
   function renderList() {
@@ -254,7 +288,6 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   }
   renderList();
 
-  // Sticky actions inside the menu (OK / Cancel)
   const actions = document.createElement('div');
   actions.className = 'select-actions';
 
@@ -269,7 +302,6 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   actions.append(ok, cancel);
   menu.append(list, actions);
 
-  // Mount button + menu
   mount.append(btn, menu);
 
   // Bulk actions below (outside menu): Clear all / Select all
@@ -281,31 +313,31 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
   `;
   mount.appendChild(bulk);
 
-  // CLEAR ALL — mutate in place, re-render ticks, then refresh app
+  // CLEAR ALL
   bulk.querySelector('[data-bulk="clear"]').onclick = (e) => {
     e.preventDefault();
-    selected.clear();         // mutate original Set
-    temp.clear();             // keep open menu ticks in sync
+    selected.clear();
+    temp.clear();
     countSpan.textContent = `(0 selected)`;
-    renderList();             // redraw ✓ instantly
-    onApply(selected);        // triggers onChange -> filters + map update
+    renderList();
+    onApply(selected);
   };
 
-  // SELECT ALL — mutate in place, re-render ticks, then refresh app
+  // SELECT ALL
   bulk.querySelector('[data-bulk="select"]').onclick = (e) => {
     e.preventDefault();
     selected.clear();
-    options.forEach(v => selected.add(v)); // fill original Set
+    options.forEach(v => selected.add(v));
     temp.clear();
     options.forEach(v => temp.add(v));
     countSpan.textContent = `(${selected.size} selected)`;
     renderList();
-    onApply(selected);        // triggers onChange -> filters + map update
+    onApply(selected);
   };
 
   // Open/close behavior
   function openMenu() {
-    temp.clear(); selected.forEach(v => temp.add(v)); // sync from current selection
+    temp.clear(); selected.forEach(v => temp.add(v));
     renderList();
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
@@ -319,9 +351,7 @@ function buildStatesDropdown({ mountId, selected, options, onApply }) {
     document.removeEventListener('keydown', onKey);
   }
   function onDocClick(e) {
-    if (!menu.hidden && !mount.contains(e.target)) {
-      closeMenu();
-    }
+    if (!menu.hidden && !mount.contains(e.target)) closeMenu();
   }
   function onKey(e) {
     if (e.key === 'Escape') closeMenu();
@@ -348,21 +378,20 @@ function toggleChip(set, value) {
     }
   });
 }
-
-function label(t){
-  return ({
-    industrial_building: 'Industrial Building',
-    industrial_shell: 'Industrial Shell',
-    industrial_land: 'Industrial Land'
-  })[t] || t;
+function label(t) {
+  return (
+    {
+      industrial_building: 'Industrial Building',
+      industrial_shell: 'Industrial Shell',
+      industrial_land: 'Industrial Land'
+    }[t] || t
+  );
 }
-
-function fmtSize(s){
+function fmtSize(s) {
   return s.size_sqft
     ? `${Number(s.size_sqft).toLocaleString()} sq ft`
     : (s.acreage ? `${s.acreage} acres` : 'Size n/a');
 }
-
-function flag(v, text){
+function flag(v, text) {
   return v ? `<span class="tag">${text}</span>` : '';
 }
